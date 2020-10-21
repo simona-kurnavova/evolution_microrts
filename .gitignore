@@ -1,0 +1,10 @@
+*.*~
+*.class
+/bin/
+/.classpath
+/.project
+/.idea
+/.vscode
+lib/
+out/
+microrts.iml
