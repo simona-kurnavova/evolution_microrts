@@ -42,7 +42,6 @@ import ai.evaluation.SimpleEvaluationFunction;
 import ai.evaluation.SimpleSqrtEvaluationFunction;
 import ai.evaluation.SimpleSqrtEvaluationFunction2;
 import ai.evaluation.SimpleSqrtEvaluationFunction3;
-import ai.evolution.EvolutionAI;
 import ai.mcts.informedmcts.InformedNaiveMCTS;
 import ai.mcts.mlps.MLPSMCTS;
 import ai.mcts.naivemcts.NaiveMCTS;

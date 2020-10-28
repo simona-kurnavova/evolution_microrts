@@ -15,7 +15,7 @@ import rts.units.UnitTypeTable;
 public class Game {
 
     private UnitTypeTable utt;
-    protected rts.GameState gs;
+    public rts.GameState gs;
     protected AI ai1, ai2;
 
     private boolean partiallyObservable, headless;

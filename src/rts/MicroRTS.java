@@ -1,6 +1,5 @@
 package rts;
 
-import gui.frontend.CustomUI;
 import gui.frontend.FrontEnd;
 import gui.frontend.TrainingUI;
 
@@ -55,6 +54,8 @@ public class MicroRTS {
             case CLIENT:
                 startClient(gameSettings);
                 break;
+            case CUSTOM:
+                TrainingUI.Companion.main(gameSettings);
         }
     }
 
