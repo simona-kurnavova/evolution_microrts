@@ -1,16 +1,18 @@
 package gui.frontend
 
-import ai.abstraction.WorkerRush
+import ai.RandomAI
 import ai.evolution.DecisionMaker
 import ai.evolution.GeneticProgrammingAI
-import ai.evolution.ManualAI
 import ai.evolution.Utils.Companion.writeToFile
 import rts.Game
 import rts.GameSettings
 import rts.PhysicalGameState
 import rts.units.Unit
 import rts.units.UnitTypeTable
+import java.lang.Thread.sleep
+import java.util.stream.Collectors
 import kotlin.random.Random
+
 
 class TrainingUI {
 
@@ -87,14 +89,16 @@ class TrainingUI {
         private fun evaluateFitness(candidates: MutableList<DecisionMaker>, gameSettings: GameSettings): MutableList<EvaluatedCandidate>  {
             val fitnessList: MutableList<EvaluatedCandidate> = mutableListOf()
 
-            for (candidate in candidates) {
-                val game = Game(gameSettings, ManualAI(UnitTypeTable(gameSettings.uttVersion)), GeneticProgrammingAI(candidate))
+            var index = 0
+            candidates.parallelStream().map {
+                val game = Game(gameSettings, RandomAI(UnitTypeTable(gameSettings.uttVersion)), GeneticProgrammingAI(it))
                 game.start()
-                fitnessList.add(EvaluatedCandidate(candidate, calculateFitness(game)))
-
-                writeToFile("Fitness = ${calculateFitness(game)}")
-            }
-
+                val fitness = calculateFitness(game)
+                fitnessList.add(EvaluatedCandidate(it, fitness))
+                EvaluatedCandidate(it, calculateFitness(game))
+                writeToFile("Fitness = $fitness")
+                index ++
+            }.collect(Collectors.toMap<Any, Any, Any>({ p: Any -> index }) { p: Any -> p })
             return fitnessList
         }
 

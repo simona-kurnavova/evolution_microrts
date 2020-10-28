@@ -25,7 +25,7 @@ class Condition {
 
     fun evaluate(state: UnitState): Boolean {
         val res = state.getEntity(direction, distance)
-        writeToFile(" # Cond eval: $direction x $distance: real=$res | cond=$entity")
+        //writeToFile(" # Cond eval: $direction x $distance: real=$res | cond=$entity")
        return state.getEntity(direction, distance) == entity
     }
 

@@ -18,8 +18,8 @@ class UnitState(val player: Int, val gs: GameState, val unit: Unit) {
         if (getTerrain(resultPosition) == TERRAIN_NONE) {
             val unitOnPosition = gs.units.filter { it.x == resultPosition.first && it.y == resultPosition.second }
 
-            writeToFile(" # My unit: $unit going to $resultPosition")
-            writeToFile(" # Units: ${gs.units}")
+            //writeToFile(" # My unit: $unit going to $resultPosition")
+            //writeToFile(" # Units: ${gs.units}")
 
             if (unitOnPosition.isNullOrEmpty())
                 return Entity.NONE
