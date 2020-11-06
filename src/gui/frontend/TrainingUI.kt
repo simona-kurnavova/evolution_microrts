@@ -1,15 +1,16 @@
 package gui.frontend
 
+import ai.PassiveAI
 import ai.RandomAI
-import ai.evolution.DecisionMaker
+import ai.RandomBiasedAI
 import ai.evolution.GeneticProgrammingAI
 import ai.evolution.Utils.Companion.writeToFile
+import ai.evolution.condition.DecisionMaker
 import rts.Game
 import rts.GameSettings
 import rts.PhysicalGameState
 import rts.units.Unit
 import rts.units.UnitTypeTable
-import java.lang.Thread.sleep
 import java.util.stream.Collectors
 import kotlin.random.Random
 
@@ -20,18 +21,18 @@ class TrainingUI {
                                 var lost: Boolean = false)
 
     companion object {
-
-        val population = 10
+        const val FITNESS_EVAL = 5
+        val population = 15
         val conditions = 100
         val epochs = 100
 
         fun main(gameSettings: GameSettings) {
 
             // Initialise population
-            var candidates: MutableList<DecisionMaker> = mutableListOf()
+            val candidates: MutableList<DecisionMaker> = mutableListOf()
             for (i in 1..population) {
                 val decisionMaker = DecisionMaker()
-                decisionMaker.initialise(conditions)
+                decisionMaker.generateConditions(conditions)
                 candidates.add(decisionMaker)
             }
 
@@ -45,6 +46,8 @@ class TrainingUI {
 
                 val max = fitnessList[fitnessList.size - 1].fitness
                 val min = fitnessList[0].fitness
+
+                writeToFile("--- AVG: ${fitnessList.sumByDouble { it.fitness } / fitnessList.size }")
 
                 // Normalise
                 fitnessList.forEach {
@@ -91,14 +94,23 @@ class TrainingUI {
 
             var index = 0
             candidates.parallelStream().map {
-                val game = Game(gameSettings, RandomAI(UnitTypeTable(gameSettings.uttVersion)), GeneticProgrammingAI(it))
-                game.start()
-                val fitness = calculateFitness(game)
+                val AIs = listOf(PassiveAI(UnitTypeTable(gameSettings.uttVersion)),
+                        RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
+                        RandomAI(UnitTypeTable(gameSettings.uttVersion)))
+
+                var fitness = 0.0
+                for (i in AIs.indices) {
+                    val game = Game(gameSettings, AIs[i], GeneticProgrammingAI(it))
+                    game.start()
+                    fitness += calculateFitness(game)
+                }
+                fitness /= AIs.size // average fitness
+
                 fitnessList.add(EvaluatedCandidate(it, fitness))
-                EvaluatedCandidate(it, calculateFitness(game))
+                EvaluatedCandidate(it, fitness)
                 writeToFile("Fitness = $fitness")
                 index ++
-            }.collect(Collectors.toMap<Any, Any, Any>({ p: Any -> index }) { p: Any -> p })
+            }.collect(Collectors.toMap<Any, Any, Any>({ index }) { p: Any -> p })
             return fitnessList
         }
 
@@ -106,7 +118,8 @@ class TrainingUI {
             val stats = getStats(game.gs.physicalGameState)
             var points: Double = (stats[1].hp.toDouble() - stats[0].hp.toDouble())
             if (game.gs.winner() == 1) points += 500.0
-            return (points / game.gs.time) + 0.1
+            return points
+            //return (points / game.gs.time) + 0.1
         }
 
 
@@ -126,28 +139,6 @@ class TrainingUI {
                 players.add(playerStatistics)
             }
             return players
-        }
-
-        fun printGameState(physicalGameState: PhysicalGameState) {
-            println("Player 0")
-            for (unit in physicalGameState.units) {
-                if (unit.player == 0) {
-                    println("    ${unit.type.name} id=${unit.id}, hp=${unit.hitPoints}, res=${unit.resources}")
-                }
-            }
-
-            println("Player 1")
-            for (unit in physicalGameState.units) {
-                if (unit.player == 1) {
-                    println("    ${unit.type.name} id=${unit.id}, hp=${unit.hitPoints}, res=${unit.resources}")
-                }
-            }
-            println("Resources")
-            for (unit in physicalGameState.units) {
-                if (unit.player == -1) {
-                    println("    ${unit.type.name} id=${unit.id}, hp=${unit.hitPoints}, res=${unit.resources}")
-                }
-            }
         }
     }
 }

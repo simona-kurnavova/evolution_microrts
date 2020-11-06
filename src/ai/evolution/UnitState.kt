@@ -1,11 +1,14 @@
 package ai.evolution
 
-import ai.evolution.Utils.Companion.writeToFile
 import rts.GameState
 import rts.PhysicalGameState.TERRAIN_NONE
 import rts.PhysicalGameState.TERRAIN_WALL
 import rts.UnitAction
 import rts.units.Unit
+import ai.evolution.Utils.Companion.Entity
+import ai.evolution.Utils.Companion.WIDTH
+import ai.evolution.Utils.Companion.directionsWithoutNone
+import rts.UnitAction.DIRECTION_NONE
 
 class UnitState(val player: Int, val gs: GameState, val unit: Unit) {
 
@@ -17,9 +20,6 @@ class UnitState(val player: Int, val gs: GameState, val unit: Unit) {
 
         if (getTerrain(resultPosition) == TERRAIN_NONE) {
             val unitOnPosition = gs.units.filter { it.x == resultPosition.first && it.y == resultPosition.second }
-
-            //writeToFile(" # My unit: $unit going to $resultPosition")
-            //writeToFile(" # Units: ${gs.units}")
 
             if (unitOnPosition.isNullOrEmpty())
                 return Entity.NONE
@@ -67,14 +67,24 @@ class UnitState(val player: Int, val gs: GameState, val unit: Unit) {
         return Pair(destinationX, destinationY)
     }
 
+    private fun findEntityInDirection(entity: Entity, direction: Int): Boolean {
+        for (i in 1..WIDTH) {
+            if (getEntity(direction, i) == entity) return true
+        }
+        return false
+    }
+
+    private fun getEntityDirection(entity: Entity, distance: Int): Int {
+        directionsWithoutNone.forEach {
+            if (getEntity(it, distance) == entity) return it
+        }
+        return DIRECTION_NONE
+    }
+
     companion object {
 
         enum class Direction {
             NONE, UP, RIGHT, LEFT, DOWN
-        }
-
-        enum class Entity {
-            NONE, WALL, ENEMY, FRIEND, RESOURCE, ME
         }
     }
 }
