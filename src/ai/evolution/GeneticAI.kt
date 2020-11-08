@@ -13,7 +13,7 @@ import rts.units.Unit
 import rts.units.UnitTypeTable
 import java.util.*
 
-class GeneticProgrammingAI(private val decisionMaker: DecisionMaker, private val unitTypeTable: UnitTypeTable? = null) : AI() {
+class GeneticAI(private val decisionMaker: DecisionMaker, private val unitTypeTable: UnitTypeTable? = null) : AI() {
 
     override fun getAction(player: Int, gs: GameState?): PlayerAction {
         val playerAction = PlayerAction()
@@ -64,7 +64,7 @@ class GeneticProgrammingAI(private val decisionMaker: DecisionMaker, private val
         return Pair(destinationX, destinationY)
     }
 
-    override fun clone(): AI = GeneticProgrammingAI(decisionMaker)
+    override fun clone(): AI = GeneticAI(decisionMaker)
 
     override fun getParameters(): MutableList<ParameterSpecification> = ArrayList()
 

@@ -56,7 +56,7 @@ public class MonteCarlo extends AIWithComputationBudget implements Interruptible
     
     
     public MonteCarlo(UnitTypeTable utt) {
-        this(100, -1, 100,
+        this(10, -1, 10,
              new RandomBiasedAI(), 
              new SimpleSqrtEvaluationFunction3());
     }

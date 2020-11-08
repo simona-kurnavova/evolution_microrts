@@ -79,7 +79,9 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     }
 
     private fun canAffordToProduce(): Boolean {
-        if (unit == null) return false
+        if (unit == null || unitResources == null)
+            return false
+
         unit.type.produces.forEach {
             if (unitResources!! >= it.cost)
                 return true
@@ -91,7 +93,11 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
     fun isResource(unit: Unit) = unit.player == -1
 
-    fun isMyBase(unit: Unit) = unit.type.name == "Base" && unit.player == player
+    fun isBase(unit: Unit) = unit.type.name == "Base"
+
+    fun isMyBase(unit: Unit) = isBase(unit) && !isEnemy(unit)
+
+    fun isEnemyBase(unit: Unit) = isBase(unit) && isEnemy(unit)
 
     fun getClosestEntity(entities: List<Unit>?): Unit? {
         return getEntitiesDistances(entities).keys.first()
@@ -111,19 +117,20 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
             if (unitOnPosition.isNullOrEmpty()) return Entity.NONE
             if (unitOnPosition[0] == unit) return Entity.ME
 
-            return when (unitOnPosition[0].player) {
-                -1 -> Entity.RESOURCE
-                player -> if (unitOnPosition[0].type.name == "Base") Entity.MY_BASE
-                          else Entity.FRIEND
-                else -> if (unitOnPosition[0].type.name == "Base") Entity.ENEMY_BASE
-                        else Entity.ENEMY
+            with(unitOnPosition[0]) {
+                if (player == -1) return Entity.RESOURCE
+                if (isMyBase(this)) return Entity.MY_BASE
+                if (isEnemyBase(this)) return Entity.ENEMY_BASE
+                return if (isEnemy(this)) Entity.ENEMY
+                else Entity.FRIEND
             }
         }
         return Entity.WALL
     }
 
     fun getUnitDistance(toUnit: Unit): Int {
-        if (unit == null) return -1
+        if (unit == null)
+            return -1
         return abs(unit.x - toUnit.x) + abs(unit.y - toUnit.y)
     }
 
@@ -156,7 +163,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     /**
      * Return entity on position relative to this unit.
      */
-    fun getEntity(direction: Int, distance: Int): Entity =
+    private fun getEntity(direction: Int, distance: Int): Entity =
         getEntityOnPosition(calculateNextPosition(direction, distance))
 
     fun getEmptyDirection(): List<Int> {

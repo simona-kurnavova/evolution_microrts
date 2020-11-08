@@ -38,6 +38,9 @@ public class GameState {
     protected HashMap<Unit,UnitActionAssignment> unitActions = new LinkedHashMap<>();
     protected UnitTypeTable utt;
 
+    public ActionStatistics stats0;
+    public ActionStatistics stats1;
+
     /**
      * Initializes the GameState with a PhysicalGameState and a UnitTypeTable
      * @param a_pgs
@@ -532,14 +535,26 @@ public class GameState {
         for(UnitActionAssignment uaa:unitActions.values()) {
             if (uaa.action.ETA(uaa.unit)+uaa.time<=time) readyToExecute.add(uaa);
         }
-                
+
+        stats0 = new ActionStatistics();
+        stats1 = new ActionStatistics();
+
         // execute the actions:
         for(UnitActionAssignment uaa:readyToExecute) {
             unitActions.remove(uaa.unit);
             
 //            System.out.println("Executing action for " + u + " issued at time " + uaa.time + " with duration " + uaa.action.ETA(uaa.unit));
             
-            uaa.action.execute(uaa.unit,this);
+            ActionStatistics stats = uaa.action.execute(uaa.unit,this);
+
+            if (uaa.unit.getPlayer() == 0) {
+                stats0.merge(stats);
+                stats1.mergeEnemy(stats);
+            }
+            else {
+                stats0.mergeEnemy(stats);
+                stats1.merge(stats);
+            }
         }
         
         return gameover();

@@ -11,8 +11,11 @@ class Condition {
     var abstractAction: AbstractAction = AbstractAction()
 
     fun mutate() {
-        if (coinToss()) partialState.mutate()
-        if (coinToss()) abstractAction.mutate()
+        if (coinToss())
+            partialState.mutate()
+
+        if (coinToss())
+            abstractAction.mutate()
     }
 
     fun evaluate(realState: State): Double = realState.compareTo(partialState)

@@ -10,7 +10,7 @@ class DecisionMaker {
     val conditions: MutableList<Condition> = mutableListOf()
 
     fun generateConditions(count: Int) {
-        for (i in 0..count) {
+        for (i in 1..count) {
             conditions.add(Condition())
         }
     }

@@ -13,12 +13,32 @@ import rts.units.UnitType
 
 class AbstractAction {
 
-    var action: Int = actions.random()
-    var entity: Entity? = null
-    var type: Type = Type.TO_ENTITY
+    private var action: Int = actions.random()
+    private var entity: Entity? = null
+    private var type: Type = Type.TO_ENTITY
 
     init {
         onActionChangeSetup()
+    }
+
+    /**
+     * Creates instance of UnitAction according to relative state of a game and unit.
+     * @param realState State of the game
+     * @return UnitAction with correct arguments
+     */
+    fun getUnitAction(realState: State): UnitAction {
+        return when(action) {
+            TYPE_HARVEST -> getEntityAction(realState, { unit -> realState.isResource(unit) })
+            TYPE_ATTACK_LOCATION, TYPE_MOVE -> getEntityAction(realState, { unit -> realState.isEnemy(unit) },
+                    type == Type.FROM_ENTITY)
+
+            TYPE_PRODUCE -> {
+                if (getUnitToProduce(realState) != null)
+                    UnitAction(TYPE_PRODUCE, realState.getEmptyDirection().random(), getUnitToProduce(realState))
+                else UnitAction(action)
+            }
+            else -> UnitAction(action) // TYPE_RETURN, TYPE_NONE
+        }
     }
 
     private fun onActionChangeSetup() {
@@ -33,34 +53,15 @@ class AbstractAction {
         }
     }
 
-    fun getUnitAction(realState: State): UnitAction {
-        when(action) {
-            TYPE_HARVEST -> return getEntityAction(realState,
-                    realState.getClosestEntity(realState.gs?.units?.filter { realState.isResource(it) }))
-
-            TYPE_ATTACK_LOCATION, TYPE_MOVE -> return getEntityAction(realState,
-                    realState.getClosestEntity(realState.gs?.units?.filter { realState.isEnemy(it) }),
-                    (type == Type.FROM_ENTITY))
-
-            TYPE_PRODUCE -> {
-                return if (getUnitToProduce(realState) != null)
-                    UnitAction(TYPE_PRODUCE, realState.getEmptyDirection().random(), getUnitToProduce(realState))
-                else UnitAction(action)
-            }
-            else -> return UnitAction(action) // TYPE_RETURN, TYPE_NONE
-        }
-    }
-
-    private fun getEntityAction(realState: State, toUnit: Unit?, reverseDirection: Boolean = false): UnitAction {
+    private fun getEntityAction(realState: State, unitFilter: (Unit) -> Boolean, reverseDirection: Boolean = false): UnitAction {
+        val toUnit = realState.getClosestEntity(realState.gs?.units?.filter { unitFilter(it) })
         if (toUnit != null) {
             val directions = realState.getUnitDirection(toUnit, reverseDirection)
-            if (realState.getUnitDistance(toUnit) == 1) {
+            if (realState.getUnitDistance(toUnit) == 1 && !reverseDirection) {
                 return UnitAction(action, directions[0])
             } else {
                 val emptyDirections = realState.getEmptyDirection()
-                directions.filter { emptyDirections.contains(it) }.forEach {
-                    return UnitAction(TYPE_MOVE, it)
-                }
+                directions.filter { emptyDirections.contains(it) }.forEach { return UnitAction(TYPE_MOVE, it) }
                 emptyDirections.forEach { return UnitAction(TYPE_MOVE, it)  }
             }
         }
@@ -80,7 +81,9 @@ class AbstractAction {
     private fun getUnitToProduce(realState: State): UnitType? {
         if (realState.canProduce!!) {
             val toProd = realState.whatToProduce()
-            if (toProd != null) return toProd
+
+            if (toProd != null)
+                return toProd
         }
         return null
     }

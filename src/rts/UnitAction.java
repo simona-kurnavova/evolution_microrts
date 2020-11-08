@@ -331,8 +331,10 @@ public class UnitAction {
      * @param u
      * @param s
      */
-    public void execute(Unit u, GameState s) {
+    public ActionStatistics execute(Unit u, GameState s) {
         PhysicalGameState pgs = s.getPhysicalGameState();
+        ActionStatistics stats = new ActionStatistics();
+
         switch (type) {
             case TYPE_NONE:	//no-op
                 break;
@@ -367,6 +369,9 @@ public class UnitAction {
                     if (other.getHitPoints() <= 0) {
                         s.removeUnit(other);
                     }
+                    if (other.getPlayer() != u.getPlayer())
+                        stats.damageDone += damage;
+                    else stats.damageDone -= damage;
                 }
             }
             break;
@@ -394,6 +399,9 @@ public class UnitAction {
                     if (maybeAResource.getResources() <= 0) {
                         s.removeUnit(maybeAResource);
                     }
+                    if (u.getResources() < u.getType().harvestAmount)
+                        stats.resHarvested += u.getHarvestAmount();
+
                     u.setResources(u.getHarvestAmount());
                 }
             }
@@ -420,6 +428,7 @@ public class UnitAction {
                 if (base != null && base.getType().isStockpile && u.getResources() > 0) {
                     Player p = pgs.getPlayer(u.getPlayer());
                     p.setResources(p.getResources() + u.getResources());
+                    stats.resToBase += u.getResources();
                     u.setResources(0);
                 } else {// base is not there
 
@@ -453,10 +462,13 @@ public class UnitAction {
                 if (p.getResources() < 0) {
                     System.err.print("Illegal action executed! resources of player " + p.ID + " are now " + p.getResources() + "\n");
                     System.err.print(s);
+                } else {
+                    stats.produced ++;
                 }
             }
             break;
         }
+        return stats;
     }
 
     public String toString() {

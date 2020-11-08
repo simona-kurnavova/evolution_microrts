@@ -1,7 +1,6 @@
 package ai.evolution
 
 import rts.GameState
-import rts.UnitAction
 import rts.UnitAction.*
 import java.io.File
 import java.nio.file.Files

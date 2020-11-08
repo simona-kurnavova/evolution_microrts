@@ -18,7 +18,7 @@ public class MouseGame extends Game {
     }
 
     @Override
-    public void start() throws Exception {
-        super.start(w);
+    public ActionStatistics start() throws Exception {
+        return super.start(w);
     }
 }
