@@ -32,8 +32,9 @@ class GeneticAI(private val decisionMaker: DecisionMaker, private val unitTypeTa
                 val executable = mutableListOf<UnitAction>()
 
                 for (action in actions) {
-                    if (possibleUnitActions.contains(action.first)) {
-                        executable.add(action.first)
+                    if (possibleUnitActions.contains(action.first.getUnitAction(state))) {
+                        executable.add(action.first.getUnitAction(state))
+                        action.first.use()
                     }
                 }
                 val action = if (executable.isNotEmpty()) executable[0] else null

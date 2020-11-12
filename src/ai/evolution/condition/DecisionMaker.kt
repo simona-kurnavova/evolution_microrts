@@ -1,7 +1,5 @@
 package ai.evolution.condition
 
-import ai.evolution.Utils.Companion.COND_MUT_PROB
-import ai.evolution.Utils.Companion.coinToss
 import ai.evolution.condition.state.State
 import rts.UnitAction
 
@@ -15,15 +13,12 @@ class DecisionMaker {
         }
     }
 
-    fun decide(realState: State): List<Pair<UnitAction, Double>> = conditions.map {
-        it.abstractAction.getUnitAction(realState) to realState.compareTo(it.partialState)
+    fun decide(realState: State): List<Pair<Condition, Double>> = conditions.map {
+        it to realState.compareTo(it.partialState)
     }.toList().sortedByDescending { (_, value) -> value }
 
-
     fun mutate() {
-        conditions.forEach {
-            if (coinToss(COND_MUT_PROB)) it.mutate()
-        }
+        conditions.forEach { it.mutate() }
     }
 
     fun crossover(decisionMaker: DecisionMaker): DecisionMaker {
