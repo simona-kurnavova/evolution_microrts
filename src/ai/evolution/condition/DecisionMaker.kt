@@ -22,16 +22,15 @@ class DecisionMaker {
 
     fun crossover(decisionMaker: DecisionMaker): DecisionMaker {
         val child = DecisionMaker()
-        val tempConditions = decisionMaker.conditions
-        tempConditions.addAll(conditions)
 
-        child.conditions.addAll(tempConditions.shuffled().filter { it.usedCount > 0 }.take(conditions.size))
-
-        if (child.conditions.size < conditions.size) {
-            child.conditions.addAll(tempConditions.filter { it.usedCount <= 0 }.shuffled()
-                    .take(conditions.size - child.conditions.size))
+        for (i in conditions.indices) {
+            child.conditions.add(when {
+                conditions[i].usedCount > 0 -> (conditions[i])
+                decisionMaker.conditions[i].usedCount > 0 -> decisionMaker.conditions[i]
+                else -> listOf(conditions[i], decisionMaker.conditions[i]).random()
+            })
+            child.conditions[i].usedCount = 0
         }
-        child.mutate()
         return child
     }
 

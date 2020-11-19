@@ -23,11 +23,11 @@ class TrainingUI {
     class EvaluatedCandidate(var decisionMaker: DecisionMaker, var fitness: Double)
     
     companion object {
-        const val population = 10 // must be dividable by 2
-        const val conditions = 250
+        const val population = 24 // must be dividable by 2
+        const val conditions = 150
         const val epochs = 300
         const val candidateCount = 2
-        const val cores = 4 // number of processor cores for parallelization
+        const val cores = 8 // number of processor cores for parallelization
 
         fun main(gameSettings: GameSettings) {
 
@@ -66,7 +66,6 @@ class TrainingUI {
                 }
                 childrenFitnessList.take(population / 2).forEach {
                     candidates.add(it.decisionMaker)
-                    it.decisionMaker.setUnused()
                 }
             }
         }
@@ -85,7 +84,7 @@ class TrainingUI {
                     for (i in AIs.indices) {
                         val game = Game(gameSettings, AIs[i], GeneticAI(it))
                         val stats: ActionStatistics = game.start()
-                        fitness += calculateFitness(game, stats, 1.0)
+                        fitness += calculateFitness(game, stats, it.getCountUsedConditions())
                     }
                     fitness /= AIs.size // average fitness
 
