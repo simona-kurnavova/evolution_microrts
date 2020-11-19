@@ -12,11 +12,11 @@ class Utils {
 
         const val COND_MUT_PROB = 0.3
 
-        const val PROB_BASE_ATTACK = 0.2
+        const val PROB_BASE_ATTACK = 0.25
 
-        const val PROB_STATE_GENERATE = 0.1
+        const val PROB_STATE_GENERATE = 0.2
 
-        const val PROB_STATE_MUTATE = 0.2
+        const val PROB_STATE_MUTATE = 0.25
 
         const val WIDTH = 16
 

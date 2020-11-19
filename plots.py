@@ -19,7 +19,7 @@ def readRes(filename, key):
             counter += 1
     return dataX, dataY
 
-filename = "output"
+filename = "output2"
 best_dataX, best_dataY = readRes(filename, "BEST")
 avg_dataX, avg_dataY = readRes(filename, "AVG")
 

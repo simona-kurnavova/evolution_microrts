@@ -1,14 +1,13 @@
 package ai.evolution.condition
 
 import ai.evolution.condition.state.State
-import rts.UnitAction
 
 class DecisionMaker {
 
     val conditions: MutableList<Condition> = mutableListOf()
 
     fun generateConditions(count: Int) {
-        for (i in 1..count) {
+        for (i in 0 until count) {
             conditions.add(Condition())
         }
     }
@@ -23,8 +22,22 @@ class DecisionMaker {
 
     fun crossover(decisionMaker: DecisionMaker): DecisionMaker {
         val child = DecisionMaker()
-        decisionMaker.conditions.shuffled().take(conditions.size / 2).forEach { child.conditions.add(it) }
-        conditions.shuffled().take(conditions.size / 2).forEach { child.conditions.add(it) }
+        val tempConditions = decisionMaker.conditions
+        tempConditions.addAll(conditions)
+
+        child.conditions.addAll(tempConditions.shuffled().filter { it.usedCount > 0 }.take(conditions.size))
+
+        if (child.conditions.size < conditions.size) {
+            child.conditions.addAll(tempConditions.filter { it.usedCount <= 0 }.shuffled()
+                    .take(conditions.size - child.conditions.size))
+        }
         return child
+    }
+
+    fun getCountUsedConditions(): Double =
+            conditions.filter { it.usedCount > 0 }.size.toDouble() / conditions.size.toDouble()
+
+    fun setUnused() {
+        conditions.forEach { it.usedCount = 0 }
     }
 }

@@ -17,7 +17,7 @@ class PartialState : State() {
     private var priority: Int = 0
 
     init {
-        for (i in 1..4) {
+        for (i in 1..2) {
             if (coinToss(PROB_STATE_GENERATE))
                 entityClose.add(getRandomEntity())
             if (coinToss(PROB_STATE_GENERATE))
@@ -26,12 +26,12 @@ class PartialState : State() {
         enemyDistance = getSmallIntOrNull()
         resourceDistance = getSmallIntOrNull()
         baseDistance = getSmallIntOrNull()
-        unitResources = getSmallIntOrNull()
-        playerResources = getSmallIntOrNull()
+        //unitResources = getSmallIntOrNull()
+        //playerResources = getSmallIntOrNull()
 
-        canProduce = getBoolOrNull()
-        canHarvest = getBoolOrNull()
-        canMove = getBoolOrNull()
+        //canProduce = getBoolOrNull()
+        //canHarvest = getBoolOrNull()
+        //canMove = getBoolOrNull()
     }
 
     fun getPriority() = priority
@@ -76,12 +76,13 @@ class PartialState : State() {
         enemyDistance = getMutatedInt(enemyDistance)
         resourceDistance = getMutatedInt(resourceDistance)
         baseDistance = getMutatedInt(baseDistance)
-        unitResources = getMutatedInt(unitResources)
-        playerResources = getMutatedInt(playerResources)
 
-        canProduce = getMutatedBool(canProduce)
-        canHarvest = getMutatedBool(canHarvest)
-        canMove = getMutatedBool(canMove)
+        //unitResources = getMutatedInt(unitResources)
+        //playerResources = getMutatedInt(playerResources)
+
+        //canProduce = getMutatedBool(canProduce)
+        //canHarvest = getMutatedBool(canHarvest)
+        //canMove = getMutatedBool(canMove)
     }
 
     private fun getMutatedBool(variable: Boolean?): Boolean? {
@@ -98,7 +99,7 @@ class PartialState : State() {
         if (variable == null) return getSmallIntOrNull()
         if (coinToss(PROB_STATE_MUTATE)) {
             val value = (-TOLERANCE.. TOLERANCE).toList().random() + variable
-            if (value < 0) {
+            if (value < 0 || value > 16) {
                 priority --
                 return null
             }

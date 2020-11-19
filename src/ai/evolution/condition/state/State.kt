@@ -208,11 +208,11 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         result += compareInts(enemyDistance, partialState.enemyDistance)
         result += compareInts(resourceDistance, partialState.resourceDistance)
         result += compareInts(baseDistance, partialState.baseDistance)
-        result += compareInts(unitResources, partialState.unitResources)
-        result += compareInts(playerResources, partialState.playerResources)
-        result += compareBool(canHarvest, partialState.canHarvest)
-        result += compareBool(canMove, partialState.canMove)
-        result += compareBool(canProduce, partialState.canProduce)
+        //result += compareInts(unitResources, partialState.unitResources)
+        //result += compareInts(playerResources, partialState.playerResources)
+        //result += compareBool(canHarvest, partialState.canHarvest)
+        //result += compareBool(canMove, partialState.canMove)
+        //result += compareBool(canProduce, partialState.canProduce)
         return partialState.getPriority().toDouble() / result.toDouble()
     }
 

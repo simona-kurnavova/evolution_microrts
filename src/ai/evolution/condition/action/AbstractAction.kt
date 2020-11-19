@@ -69,7 +69,7 @@ class AbstractAction {
     }
 
     fun mutate() {
-        if (coinToss()) {
+        if (coinToss(0.2)) {
             action = actions.random()
             onActionChangeSetup()
         }

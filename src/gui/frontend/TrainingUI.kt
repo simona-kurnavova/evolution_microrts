@@ -11,6 +11,7 @@ import rts.PhysicalGameState
 import rts.units.Unit
 import rts.units.UnitTypeTable
 import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 import kotlin.random.Random
 
 
@@ -23,10 +24,11 @@ class TrainingUI {
 
 
     companion object {
-        const val FITNESS_EVAL = 5
-        val population = 14
-        val conditions = 450
-        val epochs = 300
+        const val population = 32 // must be dividable by 2
+        const val conditions = 100
+        const val epochs = 300
+        const val candidateCount = 2
+        const val cores = 8 // number of processor cores for parallelization
 
         fun main(gameSettings: GameSettings) {
 
@@ -38,42 +40,36 @@ class TrainingUI {
                 candidates.add(decisionMaker)
             }
 
-            for (epoch in 0..epochs) {
+            for (epoch in 0 until epochs) {
                 writeToFile("Epoch $epoch")
 
+                // Evaluate fitness
                 val fitnessList: MutableList<EvaluatedCandidate> = evaluateFitness(candidates, gameSettings)
                 writeToFile("--- BEST: ${fitnessList[0].fitness}")
                 writeToFile("--- AVG: ${fitnessList.sumByDouble { it.fitness } / fitnessList.size }")
 
-                // crossover
+                // Crossover
                 val children: MutableList<DecisionMaker> = mutableListOf()
-                for (i in 0..population) {
-                    val crossCandidates = fitnessList.filter {
-                        it.fitness > Random.nextDouble(fitnessList[fitnessList.size - 1].fitness, fitnessList[0].fitness)
+                for (i in 0 until population) { // for each child
+                    val parents = mutableListOf<DecisionMaker>()
+                    while (parents.size < 2) {
+                        val parentCandidates = fitnessList.shuffled().take(candidateCount)
+                        val winner = parentCandidates.maxBy { it.fitness }
+                        if (winner != null) parents.add(winner.decisionMaker)
                     }
-                    children.add(crossCandidates.random().decisionMaker.crossover(
-                            crossCandidates.random().decisionMaker)
-                    )
+                    children.add(parents[0].crossover(parents[1]))
                 }
 
-                // Eval children fitness
+                // Mutate and evaluate children
+                children.forEach { it.mutate() }
                 val childrenFitnessList: MutableList<EvaluatedCandidate> = evaluateFitness(children, gameSettings)
 
                 // Selection
                 candidates.clear()
-                candidates.add(fitnessList[0].decisionMaker) // add best
-                fitnessList.addAll(childrenFitnessList)
+                fitnessList.take(population / 2).forEach { candidates.add(it.decisionMaker) }
+                childrenFitnessList.take(population / 2).forEach { candidates.add(it.decisionMaker) }
 
-                for (i in 1 until population) { // popuplation - 1
-                    val candidate1 = fitnessList.shuffled()[0]
-                    val candidate2 = fitnessList.shuffled()[1]
-                    candidates.add(
-                            if (candidate1.fitness > candidate2.fitness) candidate1.decisionMaker
-                            else candidate2.decisionMaker
-                    )
-                    fitnessList.removeAll(listOf(candidate1, candidate2))
-                }
-                candidates.forEach { it.mutate() }
+                candidates.forEach { it.setUnused() }
             }
         }
 
@@ -84,40 +80,38 @@ class TrainingUI {
         private fun evaluateFitness(candidates: MutableList<DecisionMaker>, gameSettings: GameSettings): MutableList<EvaluatedCandidate>  {
             val fitnessList: MutableList<EvaluatedCandidate> = mutableListOf()
 
-            var index = 0
-            candidates.parallelStream().map {
-                val AIs = listOf(RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
-                        RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion))
-                        //ManualAI(),
-                        //RandomAI(UnitTypeTable(gameSettings.uttVersion)),
-                        //RandomAI(UnitTypeTable(gameSettings.uttVersion))
-                        )
+            val candidateLists: List<List<DecisionMaker>> = candidates.chunked(cores)
 
-                var fitness = 0.0
-                for (i in AIs.indices) {
-                    val game = Game(gameSettings, AIs[i], GeneticAI(it))
-                    val stats: ActionStatistics = game.start()
-                    fitness += calculateFitness(game, stats)
-                }
-                fitness /= AIs.size // average fitness
+            for (list in candidateLists) {
+                var index = Random.nextInt()
+                list.parallelStream().map {
+                    val AIs = listOf(RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
+                            RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)))
 
-                fitnessList.add(EvaluatedCandidate(it, fitness))
-                EvaluatedCandidate(it, fitness)
-                //writeToFile("Fitness = $fitness")
-                index ++
-            }.collect(Collectors.toMap<Any, Any, Any>({ index }) { p: Any -> p })
+                    var fitness = 0.0
+                    for (i in AIs.indices) {
+                        val game = Game(gameSettings, AIs[i], GeneticAI(it))
+                        val stats: ActionStatistics = game.start()
+                        fitness += calculateFitness(game, stats, it.getCountUsedConditions())
+                    }
+                    fitness /= AIs.size // average fitness
+
+                    fitnessList.add(EvaluatedCandidate(it, fitness))
+                }.collect(Collectors.toMap<Any, Any, Any>({ ++index }) { p: Any -> p })
+            }
 
             fitnessList.sortByDescending { it.fitness }
             return fitnessList
         }
 
-        private fun calculateFitness(game: Game, playerStats: ActionStatistics): Double {
+        private fun calculateFitness(game: Game, playerStats: ActionStatistics, countUsedConditions: Double): Double {
             val stats = getStats(game.gs.physicalGameState)
-            //var points: Double = (stats[1].hp.toDouble() - stats[0].hp.toDouble())
-            var gamePoints = playerStats.damageDone + playerStats.produced + playerStats.resHarvested + playerStats.resToBase
+            val points: Double = (stats[1].hp.toDouble() - stats[0].hp.toDouble())
+            var gamePoints = playerStats.damageDone + playerStats.produced +
+                    playerStats.resHarvested + playerStats.resToBase
+            if (game.gs.winner() == 1) gamePoints += 100000
 
-            if (game.gs.winner() == 1) gamePoints += 500
-            return gamePoints.toDouble()
+            return countUsedConditions * (gamePoints.toDouble() + points)
         }
 
 

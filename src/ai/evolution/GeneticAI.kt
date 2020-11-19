@@ -3,6 +3,7 @@ package ai.evolution
 import ai.core.AI
 import ai.core.ParameterSpecification
 import ai.evolution.Utils.Companion.getPositionIndex
+import ai.evolution.condition.Condition
 import ai.evolution.condition.DecisionMaker
 import ai.evolution.condition.state.State
 import rts.GameState
@@ -29,24 +30,20 @@ class GeneticAI(private val decisionMaker: DecisionMaker, private val unitTypeTa
                 state.initialise()
 
                 val actions = decisionMaker.decide(state)
-                val executable = mutableListOf<UnitAction>()
+                val executable = mutableListOf<Condition>()
 
                 for (action in actions) {
                     if (possibleUnitActions.contains(action.first.getUnitAction(state))) {
-                        executable.add(action.first.getUnitAction(state))
-                        action.first.use()
+                        executable.add(action.first)
                     }
                 }
-                val action = if (executable.isNotEmpty()) executable[0] else null
 
-                if (action != null) {
-                    val position = calculateNextPosition(action, unit)
-                    playerAction.addUnitAction(unit,
-                            if (executable.isEmpty() || !unit.canExecuteAction(action, gs)
-                                    || gs.resourceUsage.positionsUsed.contains(getPositionIndex(position, gs)))
-                                UnitAction(TYPE_NONE)
-                            else action
-                    )
+                executable.forEach {
+                    if (unit.canExecuteAction(it.getUnitAction(state), gs)) {
+                        playerAction.addUnitAction(unit, it.getUnitAction(state))
+                        it.use()
+                        return@forEach
+                    }
                 }
             }
         }
