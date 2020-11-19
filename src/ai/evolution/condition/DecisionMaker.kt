@@ -31,6 +31,7 @@ class DecisionMaker {
             child.conditions.addAll(tempConditions.filter { it.usedCount <= 0 }.shuffled()
                     .take(conditions.size - child.conditions.size))
         }
+        child.mutate()
         return child
     }
 

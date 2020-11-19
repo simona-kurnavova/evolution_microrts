@@ -25,23 +25,17 @@ class GeneticAI(private val decisionMaker: DecisionMaker, private val unitTypeTa
         for (unit in gs.units) {
 
             if (unit.player == player && gs.getActionAssignment(unit) == null) {
+
                 val possibleUnitActions = unit.getUnitActions(gs)
                 val state = State(player, gs, unit)
                 state.initialise()
 
-                val actions = decisionMaker.decide(state)
-                val executable = mutableListOf<Condition>()
+                decisionMaker.decide(state).forEach {
+                    val unitAction = it.first.getUnitAction(state)
 
-                for (action in actions) {
-                    if (possibleUnitActions.contains(action.first.getUnitAction(state))) {
-                        executable.add(action.first)
-                    }
-                }
-
-                executable.forEach {
-                    if (unit.canExecuteAction(it.getUnitAction(state), gs)) {
-                        playerAction.addUnitAction(unit, it.getUnitAction(state))
-                        it.use()
+                    if (possibleUnitActions.contains(unitAction) && unit.canExecuteAction(unitAction, gs)) {
+                        playerAction.addUnitAction(unit, unitAction)
+                        it.first.use()
                         return@forEach
                     }
                 }

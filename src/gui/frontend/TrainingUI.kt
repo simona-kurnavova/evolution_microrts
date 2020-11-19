@@ -21,20 +21,19 @@ class TrainingUI {
                                 var lost: Boolean = false)
 
     class EvaluatedCandidate(var decisionMaker: DecisionMaker, var fitness: Double)
-
-
+    
     companion object {
-        const val population = 32 // must be dividable by 2
-        const val conditions = 100
+        const val population = 10 // must be dividable by 2
+        const val conditions = 250
         const val epochs = 300
         const val candidateCount = 2
-        const val cores = 8 // number of processor cores for parallelization
+        const val cores = 4 // number of processor cores for parallelization
 
         fun main(gameSettings: GameSettings) {
 
             // Initialise population
             val candidates: MutableList<DecisionMaker> = mutableListOf()
-            for (i in 1..population) {
+            for (i in 0 until population) {
                 val decisionMaker = DecisionMaker()
                 decisionMaker.generateConditions(conditions)
                 candidates.add(decisionMaker)
@@ -50,38 +49,32 @@ class TrainingUI {
 
                 // Crossover
                 val children: MutableList<DecisionMaker> = mutableListOf()
-                for (i in 0 until population) { // for each child
-                    val parents = mutableListOf<DecisionMaker>()
-                    while (parents.size < 2) {
-                        val parentCandidates = fitnessList.shuffled().take(candidateCount)
-                        val winner = parentCandidates.maxBy { it.fitness }
-                        if (winner != null) parents.add(winner.decisionMaker)
-                    }
-                    children.add(parents[0].crossover(parents[1]))
+                for (i in 0 until population) {
+                    val parentCandidates = fitnessList.shuffled().take(2 * candidateCount)
+                    val parents: List<EvaluatedCandidate> = parentCandidates.sortedByDescending { it.fitness }.take(2)
+                    children.add(parents[0].decisionMaker.crossover(parents[1].decisionMaker))
                 }
 
-                // Mutate and evaluate children
-                children.forEach { it.mutate() }
+                // Evaluate children
                 val childrenFitnessList: MutableList<EvaluatedCandidate> = evaluateFitness(children, gameSettings)
 
                 // Selection
                 candidates.clear()
-                fitnessList.take(population / 2).forEach { candidates.add(it.decisionMaker) }
-                childrenFitnessList.take(population / 2).forEach { candidates.add(it.decisionMaker) }
-
-                candidates.forEach { it.setUnused() }
+                fitnessList.take(population / 2).forEach {
+                    candidates.add(it.decisionMaker)
+                    it.decisionMaker.setUnused()
+                }
+                childrenFitnessList.take(population / 2).forEach {
+                    candidates.add(it.decisionMaker)
+                    it.decisionMaker.setUnused()
+                }
             }
-        }
-
-        private fun normalize(value: Double, min: Double, max: Double): Double {
-            return 1 - (value - min) / (max - min)
         }
 
         private fun evaluateFitness(candidates: MutableList<DecisionMaker>, gameSettings: GameSettings): MutableList<EvaluatedCandidate>  {
             val fitnessList: MutableList<EvaluatedCandidate> = mutableListOf()
 
             val candidateLists: List<List<DecisionMaker>> = candidates.chunked(cores)
-
             for (list in candidateLists) {
                 var index = Random.nextInt()
                 list.parallelStream().map {
@@ -92,7 +85,7 @@ class TrainingUI {
                     for (i in AIs.indices) {
                         val game = Game(gameSettings, AIs[i], GeneticAI(it))
                         val stats: ActionStatistics = game.start()
-                        fitness += calculateFitness(game, stats, it.getCountUsedConditions())
+                        fitness += calculateFitness(game, stats, 1.0)
                     }
                     fitness /= AIs.size // average fitness
 
