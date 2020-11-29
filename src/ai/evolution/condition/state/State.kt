@@ -1,7 +1,10 @@
 package ai.evolution.condition.state
 
 import ai.evolution.Utils.Companion.Entity
+import ai.evolution.Utils.Companion.WIDTH
+import ai.evolution.Utils.Companion.coinToss
 import ai.evolution.Utils.Companion.directionsWithoutNone
+import ai.evolution.condition.action.AbstractAction
 import ai.evolution.condition.state.PartialState.Companion.TOLERANCE
 import rts.GameState
 import rts.PhysicalGameState
@@ -13,9 +16,25 @@ import kotlin.math.abs
 open class State(val player: Int? = null, val gs: GameState? = null, val unit: Unit? = null) {
 
     /**
-     * Distance = 1, 4 directions
+     * Distance = 1; 4 directions
      */
     protected val entityClose: MutableList<Entity> = mutableListOf()
+
+    /**
+     * How much danger am I in: none=0, only enemies around me=1.
+     * Range: [0,1]
+     */
+    protected var directDangerIndex: Double? = null
+
+    /**
+     * How dangerous is my surroundings; distance = WIDTH / 4.
+     * Range: [0,1]
+     */
+    protected var dangerIndex: Double? = null
+
+    protected var friendsAround: Double? = null
+
+    protected var friendsEnemyRatio: Double? = null
 
     /**
      * Distance = WIDTH / 4
@@ -25,17 +44,17 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     /**
      * Closest enemy distance.
      */
-    protected var enemyDistance: Int? = null
+    protected var enemyDistance: Double? = null
 
     /**
      * Closest resource distance.
      */
-    protected var resourceDistance: Int? = null
+    protected var resourceDistance: Double? = null
 
     /**
      * Base distance.
      */
-    protected var baseDistance: Int? = null
+    protected var baseDistance: Double? = null
 
     /**
      * Number of resources hold by this unit.
@@ -53,20 +72,34 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
     var canMove: Boolean? = null // is empty slot available and I am able to
 
+    protected var strategy: Strategy = Strategy.NONE
+
     fun initialise() {
-        directionsWithoutNone.forEach { entityClose.add(getEntity(it, 1)) }
-
         val entitiesDistances = getEntitiesDistances(gs?.units)
-        val maxDistance = gs?.physicalGameState?.width ?: 16 / 4
-        entitiesDistances.forEach {
-            if (it.value <= maxDistance) entityAround.add(getEntityOnPosition(Pair(it.key.x, it.key.y)))
-        }
+        val maxDistance = gs?.physicalGameState?.width ?: WIDTH / 4
 
-        enemyDistance = entitiesDistances.filter { isEnemy(it.key) }.values.first()
-        resourceDistance = entitiesDistances.filter { isResource(it.key) }.values.first()
+        val enemies = entitiesDistances.filter { isEnemy(it.key) }
+        val resources = entitiesDistances.filter { isResource(it.key) }
+        val friends = entitiesDistances.filter { isFriend(it.key) }
+        val entitiesDistancesAround = entitiesDistances.filter { it.value <= maxDistance }
+
+        // direct close positions information
+        directionsWithoutNone.forEach { entityClose.add(getEntity(it, 1)) } // entities around
+        directDangerIndex = entityClose.filter { it == Entity.ENEMY }.size.toDouble() / 4.0 // how dangerous entities around
+
+        dangerIndex = entitiesDistancesAround.filter { isEnemy(it.key) }.size.toDouble() / ((2 * maxDistance) + 1) * ((2 * maxDistance) + 1)
+        friendsAround = entitiesDistancesAround.filter { isFriend(it.key) }.size.toDouble() / ((2 * maxDistance) + 1) * ((2 * maxDistance) + 1)
+
+        enemyDistance = enemies.values.first().toDouble() / WIDTH*WIDTH
+        resourceDistance = resources.values.first().toDouble() / WIDTH*WIDTH
 
         val bases = entitiesDistances.filter { isMyBase(it.key) }.values
-        baseDistance = if (!bases.isNullOrEmpty()) bases.first() else null
+        baseDistance = if (!bases.isNullOrEmpty()) bases.first().toDouble() / WIDTH*WIDTH else null
+        friendsEnemyRatio = friends.size.toDouble() / enemies.size.toDouble()
+
+        // -------------------------------------------------------------------------------
+
+        entitiesDistancesAround.forEach { entityAround.add(getEntityOnPosition(Pair(it.key.x, it.key.y))) }
 
         if (unit != null && player != null) {
             playerResources = gs?.getPlayer(player)?.resources ?: 0
@@ -76,6 +109,22 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
             canHarvest = unit.type.canHarvest && entityClose.contains(Entity.RESOURCE)
             canProduce = entityClose.contains(Entity.NONE) && canAffordToProduce()
         }
+
+        // -------------------------------------------------------------------------------
+
+        evaluateSituation()
+    }
+
+    /**
+     * Determines global strategy.
+     */
+    private fun evaluateSituation() {
+        if (directDangerIndex !! >= 0.5) // more than 2 enemies
+            strategy = Strategy.ATTACK
+        else if (dangerIndex !! >= 0.5 && friendsAround !! < 0.5)
+            strategy = Strategy.DEFENSE
+        else if (friendsEnemyRatio !! < 0.9)
+            strategy = Strategy.HARVEST
     }
 
     private fun canAffordToProduce(): Boolean {
@@ -90,6 +139,8 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     }
 
     fun isEnemy(unit: Unit) = unit.player != player && unit.player != -1
+
+    fun isFriend(unit: Unit) = unit.player == player
 
     fun isResource(unit: Unit) = unit.player == -1
 
@@ -201,18 +252,41 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         Pair(destinationX, destinationY)
     } else Pair(0, 0)
 
-    fun compareTo(partialState: PartialState): Double {
+    fun compareTo(partialState: PartialState, abstractAction: AbstractAction): Double {
         var result = 0
+
+        // Detects invalid condition for this unit in regard to strategy
+        when (abstractAction.getUnitAction(this).type) {
+            TYPE_HARVEST -> {
+                if (canHarvest != true || unitResources != 0) return 0.0
+                if (strategy == Strategy.ATTACK && coinToss(ENFORCE_STRATEGY_PROB))
+                    return 0.0
+            }
+            TYPE_MOVE -> if (canMove != true) return 0.0
+            TYPE_ATTACK_LOCATION ->  {
+                if (unit?.type?.canAttack != true) return 0.0
+                if (strategy == Strategy.DEFENSE || strategy == Strategy.HARVEST)
+                    if (coinToss(ENFORCE_STRATEGY_PROB)) return 0.0
+            }
+            TYPE_RETURN -> {
+                if (baseDistance == null || unitResources == 0) return 0.0
+                if (strategy == Strategy.ATTACK && coinToss(ENFORCE_STRATEGY_PROB)) return 0.0
+            }
+            TYPE_NONE -> return 0.0 // no point in empty action, means there is nothing to do here
+        }
+
         partialState.entityClose.forEach { if (entityClose.contains(it)) result ++ }
-        partialState.entityAround.forEach { if (entityAround.contains(it)) result ++ }
-        result += compareInts(enemyDistance, partialState.enemyDistance)
-        result += compareInts(resourceDistance, partialState.resourceDistance)
-        result += compareInts(baseDistance, partialState.baseDistance)
-        //result += compareInts(unitResources, partialState.unitResources)
-        //result += compareInts(playerResources, partialState.playerResources)
-        //result += compareBool(canHarvest, partialState.canHarvest)
-        //result += compareBool(canMove, partialState.canMove)
-        //result += compareBool(canProduce, partialState.canProduce)
+
+        result += compareDoubles(directDangerIndex, partialState.directDangerIndex)
+        result += compareDoubles(dangerIndex, partialState.dangerIndex)
+
+        result += compareDoubles(friendsAround, partialState.friendsAround)
+        result += compareDoubles(friendsEnemyRatio, partialState.friendsEnemyRatio)
+
+        result += compareDoubles(enemyDistance, partialState.enemyDistance)
+        result += compareDoubles(resourceDistance, partialState.resourceDistance)
+        result += compareDoubles(baseDistance, partialState.baseDistance)
+
         return partialState.getPriority().toDouble() / result.toDouble()
     }
 
@@ -221,7 +295,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         return 0
     }
 
-    private fun compareInts(variable: Int?, variableEstimate: Int?): Int {
+    private fun compareDoubles(variable: Double?, variableEstimate: Double?): Int {
         if (variable == null || variableEstimate == null) return 0
         if ((variableEstimate - TOLERANCE..variableEstimate + TOLERANCE).contains(variable))
             return 1
@@ -235,5 +309,12 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
                 return it
         }
         return null
+    }
+
+    companion object {
+        const val ENFORCE_STRATEGY_PROB = 0.65
+        enum class Strategy {
+            NONE, ATTACK, DEFENSE, HARVEST
+        }
     }
 }

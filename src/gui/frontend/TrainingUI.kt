@@ -1,7 +1,10 @@
 package gui.frontend
 
+import ai.RandomAI
 import ai.RandomBiasedAI
+import ai.core.AI
 import ai.evolution.GeneticAI
+import ai.evolution.Utils.Companion.conditionsFile
 import ai.evolution.Utils.Companion.writeToFile
 import ai.evolution.condition.DecisionMaker
 import rts.ActionStatistics
@@ -24,10 +27,12 @@ class TrainingUI {
     
     companion object {
         const val population = 24 // must be dividable by 2
-        const val conditions = 150
-        const val epochs = 300
+        const val conditions = 200
+        const val epochs = 400
         const val candidateCount = 2
         const val cores = 8 // number of processor cores for parallelization
+
+        var globalBestCanditate: EvaluatedCandidate? = null
 
         fun main(gameSettings: GameSettings) {
 
@@ -43,7 +48,7 @@ class TrainingUI {
                 writeToFile("Epoch $epoch")
 
                 // Evaluate fitness
-                val fitnessList: MutableList<EvaluatedCandidate> = evaluateFitness(candidates, gameSettings)
+                val fitnessList: MutableList<EvaluatedCandidate> = evaluateFitness(candidates, gameSettings, epoch >= 20)
                 writeToFile("--- BEST: ${fitnessList[0].fitness}")
                 writeToFile("--- AVG: ${fitnessList.sumByDouble { it.fitness } / fitnessList.size }")
 
@@ -56,7 +61,7 @@ class TrainingUI {
                 }
 
                 // Evaluate children
-                val childrenFitnessList: MutableList<EvaluatedCandidate> = evaluateFitness(children, gameSettings)
+                val childrenFitnessList: MutableList<EvaluatedCandidate> = evaluateFitness(children, gameSettings, epoch >= 20)
 
                 // Selection
                 candidates.clear()
@@ -67,18 +72,28 @@ class TrainingUI {
                 childrenFitnessList.take(population / 2).forEach {
                     candidates.add(it.decisionMaker)
                 }
+                if (epoch % 10 == 0) {
+                    writeToFile("EPOCH $epoch ------------------------------------------", conditionsFile)
+                    writeToFile("fitness=${globalBestCanditate?.fitness}", conditionsFile)
+                    writeToFile(globalBestCanditate?.decisionMaker.toString(), conditionsFile)
+
+                }
             }
         }
 
-        private fun evaluateFitness(candidates: MutableList<DecisionMaker>, gameSettings: GameSettings): MutableList<EvaluatedCandidate>  {
+        private fun evaluateFitness(candidates: MutableList<DecisionMaker>, gameSettings: GameSettings, useBestAI: Boolean = false): MutableList<EvaluatedCandidate>  {
             val fitnessList: MutableList<EvaluatedCandidate> = mutableListOf()
 
             val candidateLists: List<List<DecisionMaker>> = candidates.chunked(cores)
             for (list in candidateLists) {
                 var index = Random.nextInt()
+                val AIs = mutableListOf<AI>(RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
+                        RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)))
+
+                val bestDecisionMaker = globalBestCanditate?.decisionMaker
+                if (bestDecisionMaker != null && useBestAI) AIs.add(GeneticAI(bestDecisionMaker))
+
                 list.parallelStream().map {
-                    val AIs = listOf(RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
-                            RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)))
 
                     var fitness = 0.0
                     for (i in AIs.indices) {
@@ -93,6 +108,9 @@ class TrainingUI {
             }
 
             fitnessList.sortByDescending { it.fitness }
+            if (globalBestCanditate == null || globalBestCanditate!!.fitness <= fitnessList[0].fitness) {
+                globalBestCanditate = fitnessList[0]
+            }
             return fitnessList
         }
 
@@ -103,7 +121,7 @@ class TrainingUI {
                     playerStats.resHarvested + playerStats.resToBase
             if (game.gs.winner() == 1) gamePoints += 100000
 
-            return countUsedConditions * (gamePoints.toDouble() + points)
+            return countUsedConditions * (gamePoints.toDouble() + points + 200)
         }
 
 

@@ -20,7 +20,9 @@ class Utils {
 
         const val WIDTH = 16
 
-        val file = File("output")
+        val mainFile = File("output")
+
+        val conditionsFile = File("decitionMakers")
 
         val directions = listOf(
             DIRECTION_NONE, DIRECTION_RIGHT, DIRECTION_LEFT, DIRECTION_UP, DIRECTION_DOWN
@@ -54,7 +56,7 @@ class Utils {
         fun getPositionIndex(position: Pair<Int, Int>, gs: GameState): Int =
             (position.second * gs.physicalGameState.width) + position.first
 
-        fun writeToFile(text: String) {
+        fun writeToFile(text: String, file: File = mainFile) {
             if (file.exists()) {
                 Files.write(file.toPath(), "$text\n".toByteArray(), StandardOpenOption.APPEND)
             } else {

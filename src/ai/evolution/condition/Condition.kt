@@ -20,18 +20,24 @@ class Condition {
         val prob = if (usedCount == 0) PROB_MUT_UNUSED else PROB_MUT_USED
 
         if (coinToss(prob)) {
-            if (coinToss()) partialState.mutate()
-            else abstractAction.mutate()
+            partialState.mutate()
+            if (coinToss()) abstractAction.mutate()
         }
         usedCount = 0
     }
 
     fun getUnitAction(realState: State) = abstractAction.getUnitAction(realState)
 
-    fun evaluate(realState: State): Double = realState.compareTo(partialState)
+    fun evaluate(realState: State): Double = realState.compareTo(partialState, abstractAction)
+    override fun toString(): String {
+        if (usedCount == 0) return ""
+        return "COND: \npartialState=$partialState, " +
+                "\n --> abstractAction=$abstractAction, " +
+                "\n --> usedCount=$usedCount\n"
+    }
 
     companion object {
-        const val PROB_MUT_USED = 0.25
-        const val PROB_MUT_UNUSED = 0.85
+        const val PROB_MUT_USED = 0.15
+        const val PROB_MUT_UNUSED = 0.6
     }
 }

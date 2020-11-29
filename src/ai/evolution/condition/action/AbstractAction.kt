@@ -88,6 +88,10 @@ class AbstractAction {
         return null
     }
 
+    override fun toString(): String {
+        return "action=$action, entity=$entity, type=$type)"
+    }
+
     companion object {
         enum class Type {
             TO_ENTITY, FROM_ENTITY

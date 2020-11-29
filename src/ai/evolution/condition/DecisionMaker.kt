@@ -13,7 +13,7 @@ class DecisionMaker {
     }
 
     fun decide(realState: State): List<Pair<Condition, Double>> = conditions.map {
-        it to realState.compareTo(it.partialState)
+        it to realState.compareTo(it.partialState, it.abstractAction)
     }.toList().sortedByDescending { (_, value) -> value }
 
     fun mutate() {
@@ -39,5 +39,11 @@ class DecisionMaker {
 
     fun setUnused() {
         conditions.forEach { it.usedCount = 0 }
+    }
+
+    override fun toString(): String {
+        var string = ""
+        conditions.forEach { string += it.toString() }
+        return string
     }
 }
