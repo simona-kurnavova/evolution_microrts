@@ -1,8 +1,11 @@
 package rts;
 
 import ai.core.AI;
+import ai.evolution.TrainingUtils;
 import gui.PhysicalGameStatePanel;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JFrame;
 
 import rts.units.UnitTypeTable;
@@ -99,7 +102,7 @@ public class Game {
      * run the main loop of the game
      * @throws Exception
      */
-    public ActionStatistics start() throws Exception {
+    public List<ActionStatistics> start() throws Exception {
         // Setup UI
         JFrame w = headless ? null : PhysicalGameStatePanel
             .newVisualizer(gs, 640, 640, false, PhysicalGameStatePanel.COLORSCHEME_BLACK);
@@ -112,7 +115,7 @@ public class Game {
      * @param w a window where the game will be displayed
      * @throws Exception
      */
-    public ActionStatistics start(JFrame w) throws Exception {
+    public List<ActionStatistics> start(JFrame w) throws Exception {
         // Reset all players
         ai1.reset();
         ai2.reset();
@@ -123,6 +126,7 @@ public class Game {
 
         boolean gameover = false;
 
+        ActionStatistics stats0 = new ActionStatistics();
         ActionStatistics stats1 = new ActionStatistics();
 
         while (!gameover && gs.getTime() < maxCycles) {
@@ -140,6 +144,8 @@ public class Game {
 
             // simulate
             gameover = gs.cycle();
+
+            stats0.merge(gs.stats0);
             stats1.merge(gs.stats1);
 
             // if not headless mode, wait and repaint the window
@@ -164,6 +170,11 @@ public class Game {
         ai1.gameOver(gs.winner());
         ai2.gameOver(gs.winner());
 
-        return stats1;
+        List<ActionStatistics> stats = new ArrayList();
+        stats0.mergeEnemy(stats1);
+        stats1.mergeEnemy(stats0);
+        stats.add(stats0);
+        stats.add(stats1);
+        return stats;
     }
 }

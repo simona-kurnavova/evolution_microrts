@@ -2,10 +2,11 @@ package ai.evolution.condition.state
 
 import ai.evolution.Utils.Companion.Entity
 import ai.evolution.Utils.Companion.WIDTH
-import ai.evolution.Utils.Companion.coinToss
+import ai.evolution.Utils.Companion.Keys
+import ai.evolution.Utils.Companion.actionFile
 import ai.evolution.Utils.Companion.directionsWithoutNone
+import ai.evolution.Utils.Companion.writeToFile
 import ai.evolution.condition.action.AbstractAction
-import ai.evolution.condition.state.PartialState.Companion.TOLERANCE
 import rts.GameState
 import rts.PhysicalGameState
 import rts.UnitAction.*
@@ -14,6 +15,8 @@ import rts.units.UnitType
 import kotlin.math.abs
 
 open class State(val player: Int? = null, val gs: GameState? = null, val unit: Unit? = null) {
+
+    val parameters = mutableMapOf<Keys, Boolean>()
 
     /**
      * Distance = 1; 4 directions
@@ -75,6 +78,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     protected var strategy: Strategy = Strategy.NONE
 
     fun initialise() {
+
         val entitiesDistances = getEntitiesDistances(gs?.units)
         val maxDistance = gs?.physicalGameState?.width ?: WIDTH / 4
 
@@ -111,6 +115,12 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         }
 
         // -------------------------------------------------------------------------------
+
+        parameters[Keys.ENEMY_CLOSE] = entityClose.contains(Entity.ENEMY) || entityClose.contains(Entity.ENEMY_BASE)
+        parameters[Keys.RESOURCE_CLOSE] = entityClose.contains(Entity.RESOURCE)
+        parameters[Keys.CARRY_RESOURCES] = unitResources != 0
+        parameters[Keys.EMPTY_AROUND] = entityClose.filter { it != Entity.ENEMY }.size == 4
+        parameters[Keys.AM_BASE] = unit?.type?.name == "Base"
 
         evaluateSituation()
     }
@@ -169,7 +179,10 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
             if (unitOnPosition[0] == unit) return Entity.ME
 
             with(unitOnPosition[0]) {
-                if (player == -1) return Entity.RESOURCE
+                if (player == -1) {
+                    writeToFile("Detected resource")
+                    return Entity.RESOURCE
+                }
                 if (isMyBase(this)) return Entity.MY_BASE
                 if (isEnemyBase(this)) return Entity.ENEMY_BASE
                 return if (isEnemy(this)) Entity.ENEMY
@@ -190,10 +203,10 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         if (unit == null) return directions
 
         if (unit.y < toUnit.y) directions.add(DIRECTION_DOWN)
-        else directions.add(DIRECTION_UP)
+        else if (unit.y > toUnit.y) directions.add(DIRECTION_UP)
 
         if (unit.x < toUnit.x) directions.add(DIRECTION_RIGHT)
-        else directions.add(DIRECTION_LEFT)
+        else if (unit.x > toUnit.x) directions.add(DIRECTION_LEFT)
 
         if (reverse) {
             val reversedDirs = mutableListOf<Int>()
@@ -255,51 +268,31 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     fun compareTo(partialState: PartialState, abstractAction: AbstractAction): Double {
         var result = 0
 
+        partialState.parameters.keys.forEach {
+            if (parameters[it] == partialState.parameters[it])
+                result++
+        }
+
         // Detects invalid condition for this unit in regard to strategy
         when (abstractAction.getUnitAction(this).type) {
             TYPE_HARVEST -> {
-                if (canHarvest != true || unitResources != 0) return 0.0
-                if (strategy == Strategy.ATTACK && coinToss(ENFORCE_STRATEGY_PROB))
-                    return 0.0
+                //if (canHarvest != true) return 0.0
+                result += 1
             }
-            TYPE_MOVE -> if (canMove != true) return 0.0
+            TYPE_MOVE -> {
+                if (canMove != true) return 0.0
+            }
             TYPE_ATTACK_LOCATION ->  {
                 if (unit?.type?.canAttack != true) return 0.0
-                if (strategy == Strategy.DEFENSE || strategy == Strategy.HARVEST)
-                    if (coinToss(ENFORCE_STRATEGY_PROB)) return 0.0
             }
             TYPE_RETURN -> {
                 if (baseDistance == null || unitResources == 0) return 0.0
-                if (strategy == Strategy.ATTACK && coinToss(ENFORCE_STRATEGY_PROB)) return 0.0
+                result += 1
             }
             TYPE_NONE -> return 0.0 // no point in empty action, means there is nothing to do here
         }
 
-        partialState.entityClose.forEach { if (entityClose.contains(it)) result ++ }
-
-        result += compareDoubles(directDangerIndex, partialState.directDangerIndex)
-        result += compareDoubles(dangerIndex, partialState.dangerIndex)
-
-        result += compareDoubles(friendsAround, partialState.friendsAround)
-        result += compareDoubles(friendsEnemyRatio, partialState.friendsEnemyRatio)
-
-        result += compareDoubles(enemyDistance, partialState.enemyDistance)
-        result += compareDoubles(resourceDistance, partialState.resourceDistance)
-        result += compareDoubles(baseDistance, partialState.baseDistance)
-
-        return partialState.getPriority().toDouble() / result.toDouble()
-    }
-
-    private fun compareBool(variable: Boolean?, variableEstimate: Boolean?): Int {
-        if (variable == variableEstimate) return 1
-        return 0
-    }
-
-    private fun compareDoubles(variable: Double?, variableEstimate: Double?): Int {
-        if (variable == null || variableEstimate == null) return 0
-        if ((variableEstimate - TOLERANCE..variableEstimate + TOLERANCE).contains(variable))
-            return 1
-        return 0
+        return result.toDouble() / partialState.getPriority().toDouble()
     }
 
     fun whatToProduce(): UnitType? {
@@ -312,7 +305,6 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     }
 
     companion object {
-        const val ENFORCE_STRATEGY_PROB = 0.65
         enum class Strategy {
             NONE, ATTACK, DEFENSE, HARVEST
         }

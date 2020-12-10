@@ -20,8 +20,8 @@ class Condition {
         val prob = if (usedCount == 0) PROB_MUT_UNUSED else PROB_MUT_USED
 
         if (coinToss(prob)) {
-            partialState.mutate()
-            if (coinToss()) abstractAction.mutate()
+            if (coinToss()) partialState.mutate()
+            else abstractAction.mutate()
         }
         usedCount = 0
     }
@@ -38,6 +38,6 @@ class Condition {
 
     companion object {
         const val PROB_MUT_USED = 0.15
-        const val PROB_MUT_UNUSED = 0.6
+        const val PROB_MUT_UNUSED = 0.15
     }
 }

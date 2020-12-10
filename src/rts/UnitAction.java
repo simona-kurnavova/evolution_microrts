@@ -354,6 +354,7 @@ public class UnitAction {
                         u.setX(u.getX() - 1);
                         break;
                 }
+                stats.moved += 1;
                 break;
             case TYPE_ATTACK_LOCATION: //if there's a unit in the target location, damages it
             {
@@ -399,9 +400,7 @@ public class UnitAction {
                     if (maybeAResource.getResources() <= 0) {
                         s.removeUnit(maybeAResource);
                     }
-                    if (u.getResources() < u.getType().harvestAmount)
-                        stats.resHarvested += u.getHarvestAmount();
-
+                    stats.resHarvested += u.getHarvestAmount();
                     u.setResources(u.getHarvestAmount());
                 }
             }
@@ -426,6 +425,7 @@ public class UnitAction {
                 }
 
                 if (base != null && base.getType().isStockpile && u.getResources() > 0) {
+                    System.out.println("Got heeeeeeeeeeeeeeeere");
                     Player p = pgs.getPlayer(u.getPlayer());
                     p.setResources(p.getResources() + u.getResources());
                     stats.resToBase += u.getResources();

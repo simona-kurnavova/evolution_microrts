@@ -549,10 +549,7 @@ public class GameState {
 
             if (uaa.unit.getPlayer() == 0) {
                 stats0.merge(stats);
-                stats1.mergeEnemy(stats);
-            }
-            else {
-                stats0.mergeEnemy(stats);
+            } else {
                 stats1.merge(stats);
             }
         }

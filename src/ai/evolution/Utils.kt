@@ -24,6 +24,8 @@ class Utils {
 
         val conditionsFile = File("decitionMakers")
 
+        val actionFile = File("actions")
+
         val directions = listOf(
             DIRECTION_NONE, DIRECTION_RIGHT, DIRECTION_LEFT, DIRECTION_UP, DIRECTION_DOWN
         )
@@ -34,6 +36,14 @@ class Utils {
 
         val actions = listOf(
             TYPE_NONE, TYPE_MOVE, TYPE_RETURN, TYPE_PRODUCE, TYPE_ATTACK_LOCATION, TYPE_HARVEST
+        )
+
+        enum class Keys {
+            ENEMY_CLOSE, RESOURCE_CLOSE, CARRY_RESOURCES, EMPTY_AROUND, AM_BASE
+        }
+
+        val keys = listOf(
+            Keys.ENEMY_CLOSE, Keys.RESOURCE_CLOSE, Keys.CARRY_RESOURCES, Keys.EMPTY_AROUND, Keys.AM_BASE
         )
 
         enum class Entity {

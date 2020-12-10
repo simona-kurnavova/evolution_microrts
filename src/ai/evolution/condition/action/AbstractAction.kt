@@ -2,9 +2,11 @@ package ai.evolution.condition.action
 
 import ai.evolution.Utils.Companion.Entity
 import ai.evolution.Utils.Companion.PROB_BASE_ATTACK
+import ai.evolution.Utils.Companion.actionFile
 import ai.evolution.Utils.Companion.actions
 import ai.evolution.Utils.Companion.coinToss
 import ai.evolution.Utils.Companion.entitiesWithoutMe
+import ai.evolution.Utils.Companion.writeToFile
 import ai.evolution.condition.state.State
 import rts.UnitAction
 import rts.UnitAction.*
@@ -28,7 +30,8 @@ class AbstractAction {
      */
     fun getUnitAction(realState: State): UnitAction {
         return when(action) {
-            TYPE_HARVEST -> getEntityAction(realState, { unit -> realState.isResource(unit) })
+            TYPE_HARVEST -> getEntityAction(realState, {unit -> realState.isResource(unit)})
+            TYPE_RETURN -> getEntityAction(realState, { unit -> realState.isBase(unit) })
             TYPE_ATTACK_LOCATION, TYPE_MOVE -> getEntityAction(realState, { unit -> realState.isEnemy(unit) },
                     type == Type.FROM_ENTITY)
 
@@ -61,7 +64,7 @@ class AbstractAction {
                 return UnitAction(action, directions[0])
             } else {
                 val emptyDirections = realState.getEmptyDirection()
-                directions.filter { emptyDirections.contains(it) }.forEach { return UnitAction(TYPE_MOVE, it) }
+                directions.filter { emptyDirections.contains(it) && it != DIRECTION_NONE }.forEach { return UnitAction(TYPE_MOVE, it) }
                 emptyDirections.forEach { return UnitAction(TYPE_MOVE, it)  }
             }
         }
@@ -69,13 +72,8 @@ class AbstractAction {
     }
 
     fun mutate() {
-        if (coinToss(0.2)) {
-            action = actions.random()
-            onActionChangeSetup()
-        }
-        if (coinToss() && action == TYPE_MOVE) {
-            entity = entitiesWithoutMe.random()
-        }
+        action = actions.random()
+        onActionChangeSetup()
     }
 
     private fun getUnitToProduce(realState: State): UnitType? {
@@ -89,7 +87,16 @@ class AbstractAction {
     }
 
     override fun toString(): String {
-        return "action=$action, entity=$entity, type=$type)"
+        return "action=${getAction()}, entity=$entity, type=$type)"
+    }
+
+    private fun getAction() = when(action) {
+            TYPE_ATTACK_LOCATION -> "Attack"
+            TYPE_PRODUCE -> "Produce"
+            TYPE_RETURN -> "Return"
+            TYPE_HARVEST -> "Harvest"
+            TYPE_MOVE -> "Move"
+            else -> "None"
     }
 
     companion object {

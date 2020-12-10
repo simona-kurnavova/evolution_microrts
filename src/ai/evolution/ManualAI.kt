@@ -2,7 +2,6 @@ package ai.evolution
 
 import ai.core.AI
 import ai.core.ParameterSpecification
-import ai.evolution.Utils.Companion.coinToss
 import rts.GameState
 import rts.PlayerAction
 import rts.UnitAction
@@ -42,7 +41,7 @@ class ManualAI(private val unitTypeTable: UnitTypeTable? = null) : AI() {
             if (gs.canExecuteAnyAction(player) && gs.isUnitActionAllowed(unit, action)
                     && possibleUnitActions.contains(action)) {
                     playerAction.addUnitAction(unit, action)
-                    println(action)
+                    //println(action)
                 } else playerAction.addUnitAction(unit, possibleUnitActions.random())
         }
         return playerAction

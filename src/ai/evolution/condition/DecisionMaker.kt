@@ -1,23 +1,23 @@
 package ai.evolution.condition
 
+import ai.evolution.Utils.Companion.COND_MUT_PROB
+import ai.evolution.Utils.Companion.coinToss
 import ai.evolution.condition.state.State
 
-class DecisionMaker {
+class DecisionMaker(conditionCount: Int = 0) {
 
     val conditions: MutableList<Condition> = mutableListOf()
 
-    fun generateConditions(count: Int) {
-        for (i in 0 until count) {
-            conditions.add(Condition())
-        }
+    init {
+        repeat(conditionCount) { conditions.add(Condition()) }
     }
 
     fun decide(realState: State): List<Pair<Condition, Double>> = conditions.map {
         it to realState.compareTo(it.partialState, it.abstractAction)
-    }.toList().sortedByDescending { (_, value) -> value }
+    }.toList().shuffled().sortedByDescending { (_, value) -> value }
 
     fun mutate() {
-        conditions.forEach { it.mutate() }
+        conditions.forEach { if (coinToss(COND_MUT_PROB)) it.mutate() }
     }
 
     fun crossover(decisionMaker: DecisionMaker): DecisionMaker {

@@ -9,19 +9,23 @@ internal class ActionStatistics {
     var resToBase = 0
     @JvmField
     var produced = 0
+    @JvmField
+    var moved = 0
+
+    var enemyStats: Int = 0
 
     fun merge(stats: ActionStatistics) {
         damageDone += stats.damageDone
         resHarvested += stats.resHarvested
         resToBase += stats.resToBase
         produced += stats.produced
+        moved += stats.moved
+        enemyStats += stats.enemyStats
     }
 
     fun mergeEnemy(stats: ActionStatistics) {
-        damageDone -= stats.damageDone
-        resHarvested -= stats.resHarvested
-        resToBase -= stats.resToBase
-        produced -= stats.produced
+        enemyStats += stats.damageDone + stats.resHarvested + stats.resToBase + stats.moved
+        //writeToFile("Enemy stats: $stats")
     }
 
     override fun toString(): String {

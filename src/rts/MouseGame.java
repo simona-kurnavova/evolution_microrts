@@ -4,6 +4,8 @@ import gui.MouseController;
 import gui.PhysicalGameStateMouseJFrame;
 import gui.PhysicalGameStatePanel;
 
+import java.util.List;
+
 public class MouseGame extends Game {
 
     private PhysicalGameStateMouseJFrame w;
@@ -18,7 +20,7 @@ public class MouseGame extends Game {
     }
 
     @Override
-    public ActionStatistics start() throws Exception {
+    public List<ActionStatistics> start() throws Exception {
         return super.start(w);
     }
 }
