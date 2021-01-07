@@ -1,13 +1,8 @@
 package ai.evolution.condition.state
 
-import ai.evolution.Utils
-import ai.evolution.Utils.Companion.PROB_STATE_GENERATE
-import ai.evolution.Utils.Companion.PROB_STATE_MUTATE
 import ai.evolution.Utils.Companion.coinToss
-import ai.evolution.Utils.Companion.entitiesWithoutMe
 import ai.evolution.Utils.Companion.Keys
 import ai.evolution.Utils.Companion.keys
-import kotlin.random.Random
 
 /**
  * State used in condition for comparison with real state of game.
@@ -17,14 +12,12 @@ class PartialState : State() {
     /**
      * How much conditions this partial state has. Helps with calculation of condition weight.
      */
-    private var priority: Int = 0
+    var priority: Int = 0
 
     init {
         parameters[keys.random()] = listOf(true, false).random()
         priority++
     }
-
-    fun getPriority() = priority
 
     fun mutate() {
         if (coinToss(0.4) && parameters.keys.size > 1) {

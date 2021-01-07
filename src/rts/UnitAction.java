@@ -425,7 +425,6 @@ public class UnitAction {
                 }
 
                 if (base != null && base.getType().isStockpile && u.getResources() > 0) {
-                    System.out.println("Got heeeeeeeeeeeeeeeere");
                     Player p = pgs.getPlayer(u.getPlayer());
                     p.setResources(p.getResources() + u.getResources());
                     stats.resToBase += u.getResources();

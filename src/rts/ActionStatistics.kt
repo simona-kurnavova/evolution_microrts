@@ -1,5 +1,8 @@
 package rts
 
+import ai.evolution.Utils.Companion.writeToFile
+import javax.swing.Action
+
 internal class ActionStatistics {
     @JvmField
     var damageDone = 0
@@ -12,7 +15,10 @@ internal class ActionStatistics {
     @JvmField
     var moved = 0
 
-    var enemyStats: Int = 0
+    var enemyProduced = 0
+    var enemyDamage = 0
+    var enemyHarvest = 0
+    var enemyToBase = 0
 
     fun merge(stats: ActionStatistics) {
         damageDone += stats.damageDone
@@ -20,11 +26,19 @@ internal class ActionStatistics {
         resToBase += stats.resToBase
         produced += stats.produced
         moved += stats.moved
-        enemyStats += stats.enemyStats
+
+        enemyProduced += stats.enemyProduced
+        enemyDamage += stats.enemyDamage
+        enemyHarvest += stats.enemyHarvest
+        enemyToBase += stats.enemyToBase
+        //enemyStats.merge(stats.enemyStats)
     }
 
     fun mergeEnemy(stats: ActionStatistics) {
-        enemyStats += stats.damageDone + stats.resHarvested + stats.resToBase + stats.moved
+        enemyProduced += stats.produced
+        enemyDamage += stats.damageDone
+        enemyHarvest += stats.resHarvested
+        enemyToBase += stats.resToBase
         //writeToFile("Enemy stats: $stats")
     }
 

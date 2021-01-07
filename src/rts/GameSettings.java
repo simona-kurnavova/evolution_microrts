@@ -51,7 +51,7 @@ public class GameSettings {
     private int conflictPolicy = 1;
 
     private boolean includeConstantsInState = true, compressTerrain = false;
-    private boolean headless = false;
+    boolean headless = false;
 
     // Opponents:
     private String AI2 = "ai.RandomAI";

@@ -1,6 +1,7 @@
 package ai.evolution
 
 import ai.PassiveAI
+import ai.RandomAI
 import ai.RandomBiasedAI
 import ai.core.AI
 import ai.evolution.TrainingUtils.ACTIVE_START
@@ -57,45 +58,44 @@ class GeneticTrainingAI {
 
     private fun evaluateFitness(candidates: MutableList<DecisionMaker>, gameSettings: GameSettings, epoch: Int): MutableList<EvaluatedCandidate> {
         val evaluatedCandidates = mutableListOf<EvaluatedCandidate>()
-        val candidateLists = candidates.chunked(CORES_COUNT)
 
-        candidateLists.forEach { list ->
+        val passiveAIs = mutableListOf<AI>(PassiveAI(UnitTypeTable(gameSettings.uttVersion)),
+                RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
+                PassiveAI(UnitTypeTable(gameSettings.uttVersion)))
+
+        val activeAIs = mutableListOf<AI>(
+                PassiveAI(UnitTypeTable(gameSettings.uttVersion)),
+                RandomAI(UnitTypeTable(gameSettings.uttVersion)),
+                RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
+                RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)))
+
+        val AIs = if (epoch < ACTIVE_START) passiveAIs else activeAIs
+
+        /*val bestDecisionMaker = bestCandidate?.decisionMaker
+        if (bestDecisionMaker != null && epoch >= TOURNAMENT_START) {
+            AIs.add(GeneticAI(bestDecisionMaker))
+        }*/
+
+        candidates.chunked(CORES_COUNT).forEach { list ->
             var index = Random.nextInt()
-            val passiveAIs = mutableListOf<AI>(PassiveAI(UnitTypeTable(gameSettings.uttVersion)),
-                    PassiveAI(UnitTypeTable(gameSettings.uttVersion)),
-                    RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)))
-
-            val activeAIs = mutableListOf<AI>(RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
-                    RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
-                    RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)))
-
-            val AIs = if (epoch < ACTIVE_START) passiveAIs else activeAIs
-
-            val bestDecisionMaker = bestCandidate?.decisionMaker
-
-            if (bestDecisionMaker != null && epoch >= TOURNAMENT_START) {
-                AIs.add(GeneticAI(bestDecisionMaker))
-            }
-
             list.parallelStream().map {
                 var fitness = 0.0
-                var inconsistentAction = 0
-                AIs.forEach {ai ->
-                    val player = listOf(0, 1).random()
+                AIs.forEach { ai ->
+                    val player = 1//listOf(0, 1).random()
                     val game = if (player == 0) {
                         Game(gameSettings, GeneticAI(it, null), ai)
                     } else Game(gameSettings, ai, GeneticAI(it, null))
 
                     try {
                         val actionStatistics = game.start()
-                        fitness += calculateFitness(game, actionStatistics[player], it.getCountUsedConditions(), player, epoch, inconsistentAction)
+                        fitness += calculateFitness(game, actionStatistics[player], it.getCountUsedConditions(), player, epoch)
                     } catch (e: Exception) {
-                        inconsistentAction ++
+                        // do nothing
                     }
                 }
                 fitness /= AIs.size // average fitness
                 evaluatedCandidates.add(EvaluatedCandidate(it, fitness))
-            }.collect(Collectors.toMap({ ++index +  Random.nextInt() }) { p: Any -> p })
+            }.collect(Collectors.toMap({ ++index + Random.nextInt() }) { p: Any -> p })
         }
 
         evaluatedCandidates.sortByDescending { it.fitness }
@@ -105,32 +105,37 @@ class GeneticTrainingAI {
         return evaluatedCandidates
     }
 
-    private fun calculateFitness(game: Game, playerStats: ActionStatistics, countUsedConditions: Double, player: Int = 1, epoch: Int, inconsistentAction: Int): Double {
-        if (game.gs.winner() == player) {
-            return 100000.0
-        }
-        return when {
-            epoch < ACTIVE_START -> {
-                playerStats.resHarvested.toDouble() + playerStats.produced + playerStats.resToBase //+ playerStats.moved.toDouble()
+    private fun calculateFitness(game: Game, playerStats: ActionStatistics, countUsedConditions: Double, player: Int = 1, epoch: Int): Double {
+
+        var points = if (epoch < ACTIVE_START) playerStats.produced.toDouble()
+            else ((playerStats.damageDone.toDouble() + 1) / (playerStats.enemyDamage + 1)) +
+                playerStats.produced.toDouble() + (playerStats.moved / 100)
+
+        if (epoch >= ACTIVE_START)
+            if (game.gs.winner() == player) {
+                writeToFile("WIN")
+                points += 100000 / game.gs.time
             }
-            else -> {
-                playerStats.resToBase.toDouble() + playerStats.produced + playerStats.resHarvested + playerStats.damageDone
-            }
-        }
+
+        return points
     }
 
     private fun selectNewPopulation() {
         candidates.clear()
-        candidatesFitnessList.take(POPULATION / 2).forEach {
+        candidatesFitnessList.addAll(childrenFitnessList)
+
+        candidatesFitnessList.sortedByDescending { it.fitness }.take(POPULATION).forEach {
             candidates.add(it.decisionMaker)
             it.decisionMaker.setUnused()
         }
-        childrenFitnessList.take(POPULATION / 2).forEach {
-            candidates.add(it.decisionMaker)
-            it.decisionMaker.setUnused()
-        }
+
+        candidatesFitnessList.clear()
+        childrenFitnessList.clear()
     }
 
+    /**
+     * Tournament selection crossover.
+     */
     private fun crossover(): MutableList<DecisionMaker> {
         val children = mutableListOf<DecisionMaker>()
         repeat(POPULATION) {
@@ -173,6 +178,7 @@ class GeneticTrainingAI {
 
     private fun printFitnessStats() {
         writeToFile("--- BEST: ${candidatesFitnessList[0].fitness}")
+        writeToFile("--- WORST: ${candidatesFitnessList[candidatesFitnessList.size - 1].fitness}")
         writeToFile("--- AVG: ${candidatesFitnessList.sumByDouble { it.fitness } / candidatesFitnessList.size}")
     }
 }

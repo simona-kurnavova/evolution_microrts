@@ -17,12 +17,15 @@ class Condition {
     }
 
     fun mutate() {
-        val prob = if (usedCount == 0) PROB_MUT_UNUSED else PROB_MUT_USED
+        //val prob = if (usedCount == 0) PROB_MUT_UNUSED else PROB_MUT_USED
 
-        if (coinToss(prob)) {
+        /*if (coinToss(prob)) {
             if (coinToss()) partialState.mutate()
             else abstractAction.mutate()
-        }
+        }*/
+
+        if (coinToss()) partialState.mutate()
+        else abstractAction.mutate()
         usedCount = 0
     }
 
@@ -30,7 +33,7 @@ class Condition {
 
     fun evaluate(realState: State): Double = realState.compareTo(partialState, abstractAction)
     override fun toString(): String {
-        if (usedCount == 0) return ""
+        //if (usedCount == 0) return ""
         return "COND: \npartialState=$partialState, " +
                 "\n --> abstractAction=$abstractAction, " +
                 "\n --> usedCount=$usedCount\n"
@@ -38,6 +41,6 @@ class Condition {
 
     companion object {
         const val PROB_MUT_USED = 0.15
-        const val PROB_MUT_UNUSED = 0.15
+        const val PROB_MUT_UNUSED = 0.5
     }
 }

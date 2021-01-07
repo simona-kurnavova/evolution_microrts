@@ -10,13 +10,7 @@ import kotlin.random.Random
 class Utils {
     companion object {
 
-        const val COND_MUT_PROB = 0.3
-
         const val PROB_BASE_ATTACK = 0.25
-
-        const val PROB_STATE_GENERATE = 0.2
-
-        const val PROB_STATE_MUTATE = 0.25
 
         const val WIDTH = 16
 
@@ -39,7 +33,9 @@ class Utils {
         )
 
         enum class Keys {
-            ENEMY_CLOSE, RESOURCE_CLOSE, CARRY_RESOURCES, EMPTY_AROUND, AM_BASE
+            ENEMY_CLOSE, RESOURCE_CLOSE, CARRY_RESOURCES, EMPTY_AROUND, AM_BASE,
+            SURROUNDED, ENEMY_BASE_CLOSE, FRIEND_CLOSE,
+            OVERPOWERED
         }
 
         val keys = listOf(
