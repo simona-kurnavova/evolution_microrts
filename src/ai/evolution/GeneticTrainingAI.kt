@@ -1,16 +1,11 @@
 package ai.evolution
 
-import ai.PassiveAI
-import ai.RandomAI
-import ai.RandomBiasedAI
-import ai.core.AI
 import ai.evolution.TrainingUtils.ACTIVE_START
 import ai.evolution.condition.DecisionMaker
 import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
 import rts.PhysicalGameState
-import rts.units.UnitTypeTable
 import java.util.stream.Collectors
 import kotlin.random.Random
 import ai.evolution.TrainingUtils.EvaluatedCandidate
@@ -22,8 +17,12 @@ import ai.evolution.TrainingUtils.EPOCH_COUNT
 import ai.evolution.TrainingUtils.PARENT_COUNT
 import ai.evolution.TrainingUtils.POPULATION
 import ai.evolution.TrainingUtils.TOURNAMENT_START
+import ai.evolution.TrainingUtils.getActiveAIS
+import ai.evolution.TrainingUtils.getPassiveAIS
+import ai.evolution.Utils.Companion.actionFile
 import ai.evolution.Utils.Companion.writeToFile
 import java.lang.Exception
+import kotlin.math.abs
 
 class GeneticTrainingAI {
     
@@ -59,17 +58,7 @@ class GeneticTrainingAI {
     private fun evaluateFitness(candidates: MutableList<DecisionMaker>, gameSettings: GameSettings, epoch: Int): MutableList<EvaluatedCandidate> {
         val evaluatedCandidates = mutableListOf<EvaluatedCandidate>()
 
-        val passiveAIs = mutableListOf<AI>(PassiveAI(UnitTypeTable(gameSettings.uttVersion)),
-                RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
-                PassiveAI(UnitTypeTable(gameSettings.uttVersion)))
-
-        val activeAIs = mutableListOf<AI>(
-                PassiveAI(UnitTypeTable(gameSettings.uttVersion)),
-                RandomAI(UnitTypeTable(gameSettings.uttVersion)),
-                RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)),
-                RandomBiasedAI(UnitTypeTable(gameSettings.uttVersion)))
-
-        val AIs = if (epoch < ACTIVE_START) passiveAIs else activeAIs
+        val AIs = if (epoch < ACTIVE_START) getPassiveAIS(gameSettings) else getActiveAIS(gameSettings)
 
         /*val bestDecisionMaker = bestCandidate?.decisionMaker
         if (bestDecisionMaker != null && epoch >= TOURNAMENT_START) {
@@ -83,17 +72,17 @@ class GeneticTrainingAI {
                 AIs.forEach { ai ->
                     val player = 1//listOf(0, 1).random()
                     val game = if (player == 0) {
-                        Game(gameSettings, GeneticAI(it, null), ai)
-                    } else Game(gameSettings, ai, GeneticAI(it, null))
+                        Game(gameSettings, GeneticAI(it, null), ai.first)
+                    } else Game(gameSettings, ai.first, GeneticAI(it, null))
 
-                    try {
+                    //try {
                         val actionStatistics = game.start()
-                        fitness += calculateFitness(game, actionStatistics[player], it.getCountUsedConditions(), player, epoch)
-                    } catch (e: Exception) {
-                        // do nothing
-                    }
+                        fitness += (calculateFitness(game, actionStatistics[player], it.getCountUsedConditions(), player, epoch)).toDouble()
+                    //} catch (e: Exception) {
+                    //    writeToFile("error: ${e.message}")
+                    //}
                 }
-                fitness /= AIs.size // average fitness
+                fitness /= AIs.size.toDouble() // average fitness
                 evaluatedCandidates.add(EvaluatedCandidate(it, fitness))
             }.collect(Collectors.toMap({ ++index + Random.nextInt() }) { p: Any -> p })
         }
@@ -106,16 +95,21 @@ class GeneticTrainingAI {
     }
 
     private fun calculateFitness(game: Game, playerStats: ActionStatistics, countUsedConditions: Double, player: Int = 1, epoch: Int): Double {
+        val stats = getStats(game.gs.physicalGameState)
+        val hp = stats[player].hp.toDouble() - stats[abs(player - 1)].hp
+
+        val hpBase = stats[player].hpBase.toDouble() - stats[abs(player - 1)].hpBase
 
         var points = if (epoch < ACTIVE_START) playerStats.produced.toDouble()
-            else ((playerStats.damageDone.toDouble() + 1) / (playerStats.enemyDamage + 1)) +
-                playerStats.produced.toDouble() + (playerStats.moved / 100)
+            else ((playerStats.damageDone.toDouble() + playerStats.produced + 1) - (playerStats.enemyDamage + 1)) + (hp * 2.0) + (hpBase * 5)
 
         if (epoch >= ACTIVE_START)
             if (game.gs.winner() == player) {
-                writeToFile("WIN")
-                points += 100000 / game.gs.time
+                points += 1000000 / game.gs.time
+                writeToFile("WIN = $points, time=${game.gs.time}")
             }
+
+        writeToFile("points=$points, time=${game.gs.time}", actionFile)
 
         return points
     }
@@ -155,13 +149,9 @@ class GeneticTrainingAI {
             val playerStatistics = PlayerStatistics(
                     id = p.id,
                     units = physicalGameState.units.filter { it.player == p.id },
-                    resourceCount = physicalGameState.units.filter { it.player == p.id }.sumBy { it.resources },
-                    hp = physicalGameState.units.filter { it.player == p.id }.sumBy { it.hitPoints }
+                    hp = physicalGameState.units.filter { it.player == p.id }.sumBy { it.hitPoints },
+                    hpBase = physicalGameState.units.filter { it.player == p.id && it.type.name == "Base"}.sumBy { it.hitPoints }
             )
-            if (playerStatistics.units.isNullOrEmpty() ||
-                    (playerStatistics.units.size == 1 && playerStatistics.units.get(0)?.type?.name == "Base")) {
-                playerStatistics.lost = true
-            }
             players.add(playerStatistics)
         }
         return players

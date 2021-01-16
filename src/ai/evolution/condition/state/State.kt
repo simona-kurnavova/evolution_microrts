@@ -107,7 +107,9 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     fun isEnemyBase(unit: Unit) = isBase(unit) && isEnemy(unit)
 
     fun getClosestEntity(entities: List<Unit>?): Unit? {
-        return getEntitiesDistances(entities).keys.first()
+        val entityDistances = getEntitiesDistances(entities)
+        if (entityDistances.keys.isNullOrEmpty()) return null
+        return entityDistances.keys.first()
     }
 
     fun getEntitiesDistances(entities: List<Unit>?): Map<Unit, Int> {
