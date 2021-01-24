@@ -1,10 +1,13 @@
 package ai.evolution.condition
 
 import ai.evolution.TrainingUtils.COND_MUT_PROB
+import ai.evolution.Utils.Companion.actionFile
 import ai.evolution.Utils.Companion.coinToss
+import ai.evolution.Utils.Companion.writeToFile
 import ai.evolution.condition.action.AbstractAction
 import ai.evolution.condition.state.PartialState
 import ai.evolution.condition.state.State
+import com.google.gson.Gson
 
 class DecisionMaker(conditionCount: Int = 0) {
 
@@ -26,11 +29,7 @@ class DecisionMaker(conditionCount: Int = 0) {
         val child = DecisionMaker()
 
         for (i in conditions.indices) {
-            child.addCondition(if(coinToss()) when {
-                conditions[i].usedCount > decisionMaker.conditions[i].usedCount -> (conditions[i])
-                decisionMaker.conditions[i].usedCount > conditions[i].usedCount -> decisionMaker.conditions[i]
-                else -> listOf(conditions[i], decisionMaker.conditions[i]).random()
-            } else listOf(conditions[i], decisionMaker.conditions[i]).random())
+            child.addCondition(listOf(conditions[i], decisionMaker.conditions[i]).random())
             child.conditions[i].usedCount = 0
         }
         return child
@@ -49,8 +48,16 @@ class DecisionMaker(conditionCount: Int = 0) {
         return string
     }
 
-    fun addCondition(cond: Condition) {
+    /**
+     * Used when adding a condiition from parent during crossover - creates deep copy.
+     */
+    private fun addCondition(cond: Condition) {
         val cond2 = Condition()
+        /*val gson = Gson()
+        val conditionJson = gson.toJson(cond)
+        val conditionCopy = gson.fromJson(conditionJson, Condition::class.java)
+        conditions.add(conditionCopy)*/
+
         cond2.usedCount = 0
 
         val abstractAction = AbstractAction()

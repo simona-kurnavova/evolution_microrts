@@ -1,12 +1,12 @@
 package ai.evolution
 
+import ai.evolution.TrainingUtils.MAP_WIDTH
 import rts.GameState
 import rts.PhysicalGameState.TERRAIN_NONE
 import rts.PhysicalGameState.TERRAIN_WALL
 import rts.UnitAction
 import rts.units.Unit
 import ai.evolution.Utils.Companion.Entity
-import ai.evolution.Utils.Companion.WIDTH
 import ai.evolution.Utils.Companion.directionsWithoutNone
 import rts.UnitAction.DIRECTION_NONE
 
@@ -68,7 +68,7 @@ class UnitState(val player: Int, val gs: GameState, val unit: Unit) {
     }
 
     private fun findEntityInDirection(entity: Entity, direction: Int): Boolean {
-        for (i in 1..WIDTH) {
+        for (i in 1..MAP_WIDTH) {
             if (getEntity(direction, i) == entity) return true
         }
         return false

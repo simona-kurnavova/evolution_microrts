@@ -9,7 +9,7 @@ import ai.abstraction.pathfinding.BFSPathFinding;
 import ai.abstraction.pathfinding.FloodFillPathFinding;
 import ai.abstraction.pathfinding.GreedyPathFinding;
 import ai.abstraction.pathfinding.PathFinding;
-import org.jdom.Element;
+import org.jdom2.Element;
 import rts.GameState;
 import rts.PhysicalGameState;
 import rts.ResourceUsage;

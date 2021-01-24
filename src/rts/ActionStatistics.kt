@@ -3,7 +3,7 @@ package rts
 import ai.evolution.Utils.Companion.writeToFile
 import javax.swing.Action
 
-internal class ActionStatistics {
+public class ActionStatistics {
     @JvmField
     var damageDone = 0
     @JvmField
@@ -14,6 +14,9 @@ internal class ActionStatistics {
     var produced = 0
     @JvmField
     var moved = 0
+
+    @JvmField
+    var barracks = false
 
     var enemyProduced = 0
     var enemyDamage = 0
@@ -26,6 +29,7 @@ internal class ActionStatistics {
         resToBase += stats.resToBase
         produced += stats.produced
         moved += stats.moved
+        barracks = stats.barracks
 
         enemyProduced += stats.enemyProduced
         enemyDamage += stats.enemyDamage

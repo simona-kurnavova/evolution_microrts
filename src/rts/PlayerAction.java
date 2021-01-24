@@ -8,7 +8,7 @@ import java.io.Writer;
 import rts.units.Unit;
 import java.util.LinkedList;
 import java.util.List;
-import org.jdom.Element;
+import org.jdom2.Element;
 import rts.units.UnitTypeTable;
 import util.Pair;
 import util.XMLWriter;

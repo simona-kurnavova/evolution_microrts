@@ -3,7 +3,7 @@ package rts;
 import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
-import org.jdom.Element;
+import org.jdom2.Element;
 import rts.units.Unit;
 import rts.units.UnitTypeTable;
 import util.Pair;

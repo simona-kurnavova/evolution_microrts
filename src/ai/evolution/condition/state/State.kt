@@ -1,7 +1,7 @@
 package ai.evolution.condition.state
 
 import ai.evolution.Utils.Companion.Entity
-import ai.evolution.Utils.Companion.WIDTH
+import ai.evolution.TrainingUtils.MAP_WIDTH
 import ai.evolution.Utils.Companion.Keys
 import ai.evolution.Utils.Companion.directionsWithoutNone
 import ai.evolution.Utils.Companion.writeToFile
@@ -32,6 +32,11 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
      */
     protected var unitResources: Int? = null
 
+    /**
+     * Number of resources hold by this player.
+     */
+    protected var playerResources: Int? = null
+
     var canProduce: Boolean? = null // enough resources and able to
     var canHarvest: Boolean? = null // not full and able to
     var canMove: Boolean? = null // is empty slot available and I am able to
@@ -39,7 +44,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     fun initialise() {
 
         val entitiesDistances = getEntitiesDistances(gs?.units)
-        val maxDistance = gs?.physicalGameState?.width ?: WIDTH / 4
+        val maxDistance = gs?.physicalGameState?.width ?: MAP_WIDTH / 4
 
         val enemies = entitiesDistances.filter { isEnemy(it.key) }
         val friends = entitiesDistances.filter { isFriend(it.key) }
@@ -50,7 +55,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         val bases = entitiesDistances.filter { isMyBase(it.key) }.values
         val friendsEnemyRatio = friends.size.toDouble() / enemies.size.toDouble()
 
-        baseDistance = if (!bases.isNullOrEmpty()) bases.first().toDouble() / WIDTH*WIDTH else null
+        baseDistance = if (!bases.isNullOrEmpty()) bases.first().toDouble() / MAP_WIDTH*MAP_WIDTH else null
 
         //val directDangerIndex = entityClose.filter { it == Entity.ENEMY }.size.toDouble() / 4.0 // how dangerous entities around
         //val dangerIndex = entitiesDistancesAround.filter { isEnemy(it.key) }.size.toDouble() / ((2 * maxDistance) + 1) * ((2 * maxDistance) + 1)
@@ -62,7 +67,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         //entitiesDistancesAround.forEach { entityAround.add(getEntityOnPosition(Pair(it.key.x, it.key.y))) }
 
         if (unit != null && player != null) {
-            val playerResources = gs?.getPlayer(player)?.resources ?: 0
+            playerResources = gs?.getPlayer(player)?.resources ?: 0
             unitResources = if (isMyBase(unit)) playerResources else unit.resources
 
             canMove = unit.type.canMove && entityClose.contains(Entity.NONE)
@@ -76,7 +81,6 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         parameters[Keys.RESOURCE_CLOSE] = entityClose.contains(Entity.RESOURCE)
         parameters[Keys.CARRY_RESOURCES] = unitResources != 0
         parameters[Keys.EMPTY_AROUND] = entityClose.filter { it != Entity.ENEMY }.size == 4
-        parameters[Keys.AM_BASE] = unit?.type?.name == "Base"
         parameters[Keys.SURROUNDED] = entityClose.filter { it == Entity.ENEMY }.size > 1
         parameters[Keys.ENEMY_BASE_CLOSE] = entityClose.any { it == Entity.ENEMY_BASE }
         parameters[Keys.FRIEND_CLOSE] = entityClose.any { it == Entity.FRIEND }
@@ -115,6 +119,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     fun getEntitiesDistances(entities: List<Unit>?): Map<Unit, Int> {
         if (unit == null || entities.isNullOrEmpty()) return mapOf()
         return entities.map { it to getUnitDistance(it)}
+                .filter { it.second >= 0 }
                 .sortedBy { (_, value) -> value }
                 .toMap()
     }
@@ -223,20 +228,14 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
         // Detects invalid condition for this unit
         when (abstractAction.getUnitAction(this).type) {
-            TYPE_HARVEST -> {
-                //if (canHarvest != true) return 0.0
-                result += 1
+            TYPE_HARVEST -> if (canHarvest != true) return 0.0
+            TYPE_MOVE -> if (canMove != true) return 0.0
+            TYPE_ATTACK_LOCATION -> if (unit?.type?.canAttack != true) return 0.0
+            TYPE_RETURN -> if (baseDistance == null || unitResources == 0) return 0.0
+            TYPE_PRODUCE -> {
+
             }
-            TYPE_MOVE -> {
-                if (canMove != true) return 0.0
-            }
-            TYPE_ATTACK_LOCATION ->  {
-                if (unit?.type?.canAttack != true) return 0.0
-            }
-            TYPE_RETURN -> {
-                if (baseDistance == null || unitResources == 0) return 0.0
-                result += 1
-            }
+            TYPE_NONE -> return 0.0
         }
 
         return result.toDouble() / partialState.priority.toDouble()
@@ -245,7 +244,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     fun whatToProduce(): UnitType? {
         if (unit == null) return null
         unit.type.produces.shuffled().forEach {
-            if (unitResources!! >= it.cost)
+            if (playerResources!! >= it.cost)
                 return it
         }
         return null

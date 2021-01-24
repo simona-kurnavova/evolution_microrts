@@ -17,13 +17,6 @@ class Condition {
     }
 
     fun mutate() {
-        //val prob = if (usedCount == 0) PROB_MUT_UNUSED else PROB_MUT_USED
-
-        /*if (coinToss(prob)) {
-            if (coinToss()) partialState.mutate()
-            else abstractAction.mutate()
-        }*/
-
         if (coinToss()) partialState.mutate()
         else abstractAction.mutate()
         usedCount = 0

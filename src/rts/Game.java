@@ -54,6 +54,16 @@ public class Game {
     }
 
     public Game(UnitTypeTable utt, String mapLocation, boolean headless, boolean partiallyObservable, int maxCycles,
+                int updateInterval, AI ai1, String ai2, boolean reversed) throws Exception {
+        this(utt, mapLocation, headless, partiallyObservable, maxCycles, updateInterval);
+
+        Constructor cons2 = Class.forName(ai2).getConstructor(UnitTypeTable.class);
+
+        this.ai1 = reversed ? (AI) cons2.newInstance(utt) : ai1;
+        this.ai2 = reversed ? ai1 : (AI) cons2.newInstance(utt);
+    }
+
+    public Game(UnitTypeTable utt, String mapLocation, boolean headless, boolean partiallyObservable, int maxCycles,
                 int updateInterval, AI ai1, AI ai2) throws Exception {
         this(utt, mapLocation, headless, partiallyObservable, maxCycles, updateInterval);
 

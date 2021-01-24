@@ -54,8 +54,17 @@ public class MicroRTS {
             case CLIENT:
                 startClient(gameSettings);
                 break;
-            case CUSTOM:
+            case TRAIN:
+                TrainingUI.Companion.train(gameSettings);
+                break;
+            case TEST:
+                TrainingUI.Companion.test(gameSettings);
+                break;
+            case TRAIN_TEST:
                 TrainingUI.Companion.main(gameSettings);
+                break;
+            case RUN:
+                TrainingUI.Companion.runGame(gameSettings);
         }
     }
 

@@ -18,7 +18,7 @@ import ai.stochastic.UnitActionProbabilityDistributionAI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import org.jdom.input.SAXBuilder;
+import org.jdom2.input.SAXBuilder;
 import rts.GameState;
 import rts.PlayerAction;
 import rts.units.UnitTypeTable;

@@ -9,3 +9,7 @@ lib/
 out/
 microrts.iml
 output
+.gradle
+/build/
+/output/
+gradle/wrapper/gradle-wrapper.jar

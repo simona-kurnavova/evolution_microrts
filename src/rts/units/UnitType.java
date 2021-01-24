@@ -7,7 +7,7 @@ import com.eclipsesource.json.JsonValue;
 import java.io.Writer;
 import java.util.ArrayList;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 import util.XMLWriter;
 
 /**
@@ -20,8 +20,22 @@ public class UnitType {
 	/**
 	 * The unique identifier of this type
 	 */
-    public int ID = 0;          
-    
+    public int ID = 0;
+
+    @Override
+    public String toString() {
+        return "UnitType{" +
+                "name='" + name + '\'' +
+                ", cost=" + cost +
+                ", hp=" + hp +
+                ", attackRange=" + attackRange +
+                ", isResource=" + isResource +
+                ", canHarvest=" + canHarvest +
+                ", canMove=" + canMove +
+                ", canAttack=" + canAttack +
+                '}';
+    }
+
     /**
      * The name of this type
      */

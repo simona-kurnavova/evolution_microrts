@@ -20,7 +20,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
-import org.jdom.input.SAXBuilder;
+import org.jdom2.input.SAXBuilder;
 import rts.GameState;
 import rts.Trace;
 import rts.TraceEntry;

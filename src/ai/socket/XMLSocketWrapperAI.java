@@ -14,7 +14,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import org.jdom.input.SAXBuilder;
+import org.jdom2.input.SAXBuilder;
 import rts.GameState;
 import rts.PlayerAction;
 import rts.units.UnitTypeTable;

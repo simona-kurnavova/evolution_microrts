@@ -8,6 +8,10 @@ import ai.evolution.condition.DecisionMaker
 import ai.evolution.condition.state.State
 import rts.GameState
 import rts.PlayerAction
+import rts.UnitAction
+import rts.UnitAction.DIRECTION_DOWN
+import rts.UnitAction.TYPE_PRODUCE
+import rts.units.UnitType
 import rts.units.UnitTypeTable
 import java.util.*
 
@@ -22,6 +26,12 @@ class GeneticAI(private val decisionMaker: DecisionMaker, private val unitTypeTa
 
         for (unit in gs.units) {
 
+            if (unit.type.name != "Base" && unit.type.name != "Worker" && unit.type.name != "Resource" && unit.type.name != "Barracks") {
+               // if (unit.player == player)
+               //     writeToFile("My unit: ${unit.type.name}")
+                //else writeToFile("Enemy unit: ${unit.type.name}")
+            }
+
             if (unit.player == player && gs.getActionAssignment(unit) == null) {
 
                 val possibleUnitActions = unit.getUnitActions(gs)
@@ -33,6 +43,12 @@ class GeneticAI(private val decisionMaker: DecisionMaker, private val unitTypeTa
 
                 decisionMaker.decide(state).forEach {
                     val unitAction = it.first.getUnitAction(state)
+
+                    /*if (it.first.abstractAction.action == TYPE_PRODUCE &&
+                            possibleUnitActions.filter { it.type == TYPE_PRODUCE && it.unitType.cost > 1 }.isNotEmpty()) {
+                        writeToFile(it.first.getUnitAction(state).toString(), actionFile)
+                        writeToFile(possibleUnitActions.filter { it.type == TYPE_PRODUCE && it.unitType.cost > 1 }[0].toString(), actionFile)
+                    }*/
 
                     if (possibleUnitActions.contains(unitAction) && unit.canExecuteAction(unitAction, gs)
                             && gs.isUnitActionAllowed(unit, unitAction)) {

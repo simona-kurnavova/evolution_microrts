@@ -42,8 +42,8 @@ import rts.units.Unit;
 import rts.units.UnitTypeTable;
 import util.Pair;
 //weka itens
-import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.Instance;
 import weka.classifiers.functions.SimpleLogistic;
 import weka.core.DenseInstance;
 import weka.core.SerializationHelper;

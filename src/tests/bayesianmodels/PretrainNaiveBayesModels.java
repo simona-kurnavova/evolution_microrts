@@ -17,7 +17,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-import org.jdom.input.SAXBuilder;
+import org.jdom2.input.SAXBuilder;
 import rts.GameState;
 import rts.Trace;
 import rts.TraceEntry;

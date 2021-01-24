@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import org.jdom.Element;
+import org.jdom2.Element;
 import rts.UnitAction;
 import rts.units.Unit;
 import rts.units.UnitTypeTable;

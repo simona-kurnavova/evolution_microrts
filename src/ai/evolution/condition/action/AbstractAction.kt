@@ -1,7 +1,9 @@
 package ai.evolution.condition.action
 
+import ai.evolution.TrainingUtils.ALLOW_WORKERS_ONLY
+import ai.evolution.TrainingUtils.PROB_BASE_ATTACK
+import ai.evolution.TrainingUtils.UTT_VERSION
 import ai.evolution.Utils.Companion.Entity
-import ai.evolution.Utils.Companion.PROB_BASE_ATTACK
 import ai.evolution.Utils.Companion.actions
 import ai.evolution.Utils.Companion.coinToss
 import ai.evolution.Utils.Companion.entitiesWithoutMe
@@ -9,13 +11,18 @@ import ai.evolution.condition.state.State
 import rts.UnitAction
 import rts.UnitAction.*
 import rts.units.Unit
-import rts.units.UnitType
+import rts.units.UnitTypeTable
 
 class AbstractAction {
 
     var action: Int = actions.random()
     var entity: Entity? = null
     var type: Type = Type.TO_ENTITY
+
+    /**
+     * Name of the unit to produce.
+     */
+    var unitToProduce: String? = null
 
     init {
         onActionChangeSetup()
@@ -28,11 +35,12 @@ class AbstractAction {
      */
     fun getUnitAction(realState: State): UnitAction {
         return when(action) {
-            TYPE_NONE -> UnitAction(action)
+            TYPE_NONE -> UnitAction(TYPE_NONE)
             TYPE_PRODUCE -> {
-                if (getUnitToProduce(realState) != null)
-                    UnitAction(TYPE_PRODUCE, realState.getEmptyDirection().random(), getUnitToProduce(realState))
-                else UnitAction(action)
+                val directions = realState.getEmptyDirection()
+                val produces = realState.unit?.type?.produces?.filter { it.name == unitToProduce }
+                if (directions.isNullOrEmpty() || produces.isNullOrEmpty()) UnitAction(TYPE_NONE)
+                else UnitAction(TYPE_PRODUCE, realState.getEmptyDirection().random(), produces[0])
             }
             else -> getEntityAction(realState, { unit -> realState.isEntity(unit, entity) }, type == Type.FROM_ENTITY)
         }
@@ -41,6 +49,8 @@ class AbstractAction {
     private fun onActionChangeSetup() {
         type = Type.TO_ENTITY
         when (action) {
+            TYPE_PRODUCE -> unitToProduce = if (ALLOW_WORKERS_ONLY) "Worker"
+            else UnitTypeTable(UTT_VERSION).unitTypes.random().name
             TYPE_HARVEST -> entity = Entity.RESOURCE // Harvest nearest resource
             TYPE_ATTACK_LOCATION -> entity = if (coinToss(PROB_BASE_ATTACK)) Entity.ENEMY_BASE else Entity.ENEMY
             TYPE_RETURN -> entity = Entity.MY_BASE
@@ -49,13 +59,17 @@ class AbstractAction {
                 type = types.random()
             }
         }
+
+        if (action != TYPE_PRODUCE)
+            unitToProduce = null
     }
 
     private fun getEntityAction(realState: State, unitFilter: (Unit) -> Boolean, reverseDirection: Boolean = false): UnitAction {
         val toUnit = realState.getClosestEntity(realState.gs?.units?.filter { unitFilter(it) })
         if (toUnit != null) {
             val directions = realState.getUnitDirection(toUnit, reverseDirection)
-            if (realState.getUnitDistance(toUnit) == 1 && !reverseDirection) {
+            val range = if (action == TYPE_ATTACK_LOCATION) realState.unit?.attackRange else 1
+            if (realState.getUnitDistance(toUnit) == range && !reverseDirection) {
                 if (action == TYPE_ATTACK_LOCATION) return UnitAction(action, toUnit.x, toUnit.y)
                 return UnitAction(action, directions[0])
             } else {
@@ -72,18 +86,8 @@ class AbstractAction {
         onActionChangeSetup()
     }
 
-    private fun getUnitToProduce(realState: State): UnitType? {
-        if (realState.canProduce!!) {
-            val toProd = realState.whatToProduce()
-
-            if (toProd != null)
-                return toProd
-        }
-        return null
-    }
-
     override fun toString(): String {
-        return "action=${getAction()}, entity=$entity, type=$type)"
+        return "action=${getAction()}, entity=$entity, type=$type, unitToProd=${unitToProduce})"
     }
 
     private fun getAction() = when(action) {

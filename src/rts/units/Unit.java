@@ -1,16 +1,17 @@
 package rts.units;
 
 import com.eclipsesource.json.JsonObject;
-import java.io.Serializable;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
-import org.jdom.Element;
+import org.jdom2.Element;
 import rts.GameState;
 import rts.PhysicalGameState;
 import rts.Player;
 import rts.UnitAction;
 import util.XMLWriter;
+
+import java.io.Serializable;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents an instance of any unit in the game.

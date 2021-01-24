@@ -13,9 +13,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import util.XMLWriter;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.jdom.input.SAXBuilder;
+import org.jdom2.Element;
+import org.jdom2.JDOMException;
+import org.jdom2.input.SAXBuilder;
 import rts.units.Unit;
 import rts.units.UnitTypeTable;
 

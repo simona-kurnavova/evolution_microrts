@@ -11,7 +11,7 @@ import java.util.zip.ZipInputStream;
 
 import javax.swing.*;
 
-import org.jdom.input.SAXBuilder;
+import org.jdom2.input.SAXBuilder;
 import rts.*;
 
 /**

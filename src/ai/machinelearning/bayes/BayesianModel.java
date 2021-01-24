@@ -9,7 +9,7 @@ import ai.machinelearning.bayes.featuregeneration.FeatureGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import ai.stochastic.UnitActionProbabilityDistribution;
-import org.jdom.Element;
+import org.jdom2.Element;
 import rts.GameState;
 import rts.UnitAction;
 import rts.units.Unit;

@@ -5,7 +5,7 @@ import com.eclipsesource.json.JsonObject;
 import java.io.Writer;
 import java.util.Objects;
 import java.util.Random;
-import org.jdom.Element;
+import org.jdom2.Element;
 import rts.units.Unit;
 import rts.units.UnitType;
 import rts.units.UnitTypeTable;
@@ -462,7 +462,10 @@ public class UnitAction {
                     System.err.print("Illegal action executed! resources of player " + p.ID + " are now " + p.getResources() + "\n");
                     System.err.print(s);
                 } else {
-                    stats.produced ++;
+                    if (newUnit.getType().name.equals("Barracks"))
+                        stats.barracks = true;
+                    else
+                        stats.produced += newUnit.getCost();
                 }
             }
             break;
