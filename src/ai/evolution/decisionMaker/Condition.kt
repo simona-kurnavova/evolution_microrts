@@ -1,9 +1,6 @@
-package ai.evolution.condition
+package ai.evolution.decisionMaker
 
 import ai.evolution.Utils.Companion.coinToss
-import ai.evolution.condition.action.AbstractAction
-import ai.evolution.condition.state.PartialState
-import ai.evolution.condition.state.State
 
 class Condition {
 
@@ -25,8 +22,8 @@ class Condition {
     fun getUnitAction(realState: State) = abstractAction.getUnitAction(realState)
 
     fun evaluate(realState: State): Double = realState.compareTo(partialState, abstractAction)
+
     override fun toString(): String {
-        //if (usedCount == 0) return ""
         return "COND: \npartialState=$partialState, " +
                 "\n --> abstractAction=$abstractAction, " +
                 "\n --> usedCount=$usedCount\n"

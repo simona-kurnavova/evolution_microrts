@@ -1,22 +1,14 @@
-package ai.evolution.condition.action
+package ai.evolution.decisionMaker
 
-import ai.evolution.TrainingUtils.ALLOW_WORKERS_ONLY
-import ai.evolution.TrainingUtils.PROB_BASE_ATTACK
-import ai.evolution.TrainingUtils.UTT_VERSION
-import ai.evolution.Utils.Companion.Entity
-import ai.evolution.Utils.Companion.actions
-import ai.evolution.Utils.Companion.coinToss
-import ai.evolution.Utils.Companion.entitiesWithoutMe
-import ai.evolution.condition.state.State
+import ai.evolution.Utils
 import rts.UnitAction
-import rts.UnitAction.*
 import rts.units.Unit
 import rts.units.UnitTypeTable
 
 class AbstractAction {
 
-    var action: Int = actions.random()
-    var entity: Entity? = null
+    var action: Int = Utils.actions.random()
+    var entity: Utils.Companion.Entity? = null
     var type: Type = Type.TO_ENTITY
 
     /**
@@ -35,12 +27,12 @@ class AbstractAction {
      */
     fun getUnitAction(realState: State): UnitAction {
         return when(action) {
-            TYPE_NONE -> UnitAction(TYPE_NONE)
-            TYPE_PRODUCE -> {
+            UnitAction.TYPE_NONE -> UnitAction(UnitAction.TYPE_NONE)
+            UnitAction.TYPE_PRODUCE -> {
                 val directions = realState.getEmptyDirection()
                 val produces = realState.unit?.type?.produces?.filter { it.name == unitToProduce }
-                if (directions.isNullOrEmpty() || produces.isNullOrEmpty()) UnitAction(TYPE_NONE)
-                else UnitAction(TYPE_PRODUCE, realState.getEmptyDirection().random(), produces[0])
+                if (directions.isNullOrEmpty() || produces.isNullOrEmpty()) UnitAction(UnitAction.TYPE_NONE)
+                else UnitAction(UnitAction.TYPE_PRODUCE, realState.getEmptyDirection().random(), produces[0])
             }
             else -> getEntityAction(realState, { unit -> realState.isEntity(unit, entity) }, type == Type.FROM_ENTITY)
         }
@@ -49,18 +41,18 @@ class AbstractAction {
     private fun onActionChangeSetup() {
         type = Type.TO_ENTITY
         when (action) {
-            TYPE_PRODUCE -> unitToProduce = if (ALLOW_WORKERS_ONLY) "Worker"
-            else UnitTypeTable(UTT_VERSION).unitTypes.random().name
-            TYPE_HARVEST -> entity = Entity.RESOURCE // Harvest nearest resource
-            TYPE_ATTACK_LOCATION -> entity = if (coinToss(PROB_BASE_ATTACK)) Entity.ENEMY_BASE else Entity.ENEMY
-            TYPE_RETURN -> entity = Entity.MY_BASE
-            TYPE_MOVE -> {
-                entity = if (entity != null) entity else entitiesWithoutMe.random()
+            UnitAction.TYPE_PRODUCE -> unitToProduce = if (TrainingUtils.ALLOW_WORKERS_ONLY) "Worker"
+            else UnitTypeTable(TrainingUtils.UTT_VERSION).unitTypes.random().name
+            UnitAction.TYPE_HARVEST -> entity = Utils.Companion.Entity.RESOURCE // Harvest nearest resource
+            UnitAction.TYPE_ATTACK_LOCATION -> entity = if (Utils.coinToss(TrainingUtils.PROB_BASE_ATTACK)) Utils.Companion.Entity.ENEMY_BASE else Utils.Companion.Entity.ENEMY
+            UnitAction.TYPE_RETURN -> entity = Utils.Companion.Entity.MY_BASE
+            UnitAction.TYPE_MOVE -> {
+                entity = if (entity != null) entity else Utils.entitiesWithoutMe.random()
                 type = types.random()
             }
         }
 
-        if (action != TYPE_PRODUCE)
+        if (action != UnitAction.TYPE_PRODUCE)
             unitToProduce = null
     }
 
@@ -68,21 +60,21 @@ class AbstractAction {
         val toUnit = realState.getClosestEntity(realState.gs?.units?.filter { unitFilter(it) })
         if (toUnit != null) {
             val directions = realState.getUnitDirection(toUnit, reverseDirection)
-            val range = if (action == TYPE_ATTACK_LOCATION) realState.unit?.attackRange else 1
+            val range = if (action == UnitAction.TYPE_ATTACK_LOCATION) realState.unit?.attackRange else 1
             if (realState.getUnitDistance(toUnit) == range && !reverseDirection) {
-                if (action == TYPE_ATTACK_LOCATION) return UnitAction(action, toUnit.x, toUnit.y)
+                if (action == UnitAction.TYPE_ATTACK_LOCATION) return UnitAction(action, toUnit.x, toUnit.y)
                 return UnitAction(action, directions[0])
             } else {
                 val emptyDirections = realState.getEmptyDirection()
-                directions.filter { emptyDirections.contains(it) && it != DIRECTION_NONE }.forEach { return UnitAction(TYPE_MOVE, it) }
-                emptyDirections.forEach { return UnitAction(TYPE_MOVE, it)  }
+                directions.filter { emptyDirections.contains(it) && it != UnitAction.DIRECTION_NONE }.forEach { return UnitAction(UnitAction.TYPE_MOVE, it) }
+                emptyDirections.forEach { return UnitAction(UnitAction.TYPE_MOVE, it) }
             }
         }
-        return UnitAction(TYPE_NONE)
+        return UnitAction(UnitAction.TYPE_NONE)
     }
 
     fun mutate() {
-        action = actions.random()
+        action = Utils.actions.random()
         onActionChangeSetup()
     }
 
@@ -91,11 +83,11 @@ class AbstractAction {
     }
 
     private fun getAction() = when(action) {
-            TYPE_ATTACK_LOCATION -> "Attack"
-            TYPE_PRODUCE -> "Produce"
-            TYPE_RETURN -> "Return"
-            TYPE_HARVEST -> "Harvest"
-            TYPE_MOVE -> "Move"
+            UnitAction.TYPE_ATTACK_LOCATION -> "Attack"
+            UnitAction.TYPE_PRODUCE -> "Produce"
+            UnitAction.TYPE_RETURN -> "Return"
+            UnitAction.TYPE_HARVEST -> "Harvest"
+            UnitAction.TYPE_MOVE -> "Move"
             else -> "None"
     }
 

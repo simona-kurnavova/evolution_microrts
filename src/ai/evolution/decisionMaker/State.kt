@@ -1,26 +1,24 @@
-package ai.evolution.condition.state
+package ai.evolution.decisionMaker
 
-import ai.evolution.Utils.Companion.Entity
-import ai.evolution.TrainingUtils.MAP_WIDTH
-import ai.evolution.Utils.Companion.Keys
-import ai.evolution.Utils.Companion.directionsWithoutNone
-import ai.evolution.Utils.Companion.writeToFile
-import ai.evolution.condition.action.AbstractAction
+import ai.evolution.Utils
+import ai.evolution.strategyDecisionMaker.Strategy
+import ai.evolution.strategyDecisionMaker.StrategyCondition
+import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 import rts.GameState
 import rts.PhysicalGameState
-import rts.UnitAction.*
+import rts.UnitAction
 import rts.units.Unit
 import rts.units.UnitType
 import kotlin.math.abs
 
 open class State(val player: Int? = null, val gs: GameState? = null, val unit: Unit? = null) {
 
-    val parameters = mutableMapOf<Keys, Boolean>()
+    val parameters = mutableMapOf<Utils.Companion.Keys, Boolean>()
 
     /**
      * Distance = 1; 4 directions
      */
-    private val entityClose: MutableList<Entity> = mutableListOf()
+    private val entityClose: MutableList<Utils.Companion.Entity> = mutableListOf()
 
     /**
      * Base distance.
@@ -44,18 +42,18 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     fun initialise() {
 
         val entitiesDistances = getEntitiesDistances(gs?.units)
-        val maxDistance = gs?.physicalGameState?.width ?: MAP_WIDTH / 4
+        val maxDistance = gs?.physicalGameState?.width ?: TrainingUtils.MAP_WIDTH / 4
 
         val enemies = entitiesDistances.filter { isEnemy(it.key) }
         val friends = entitiesDistances.filter { isFriend(it.key) }
         val entitiesDistancesAround = entitiesDistances.filter { it.value <= maxDistance }
         //val resources = entitiesDistances.filter { isResource(it.key) }
 
-        directionsWithoutNone.forEach { entityClose.add(getEntity(it, 1)) } // entities around
+        Utils.directionsWithoutNone.forEach { entityClose.add(getEntity(it, 1)) } // entities around
         val bases = entitiesDistances.filter { isMyBase(it.key) }.values
         val friendsEnemyRatio = friends.size.toDouble() / enemies.size.toDouble()
 
-        baseDistance = if (!bases.isNullOrEmpty()) bases.first().toDouble() / MAP_WIDTH*MAP_WIDTH else null
+        baseDistance = if (!bases.isNullOrEmpty()) bases.first().toDouble() / TrainingUtils.MAP_WIDTH * TrainingUtils.MAP_WIDTH else null
 
         //val directDangerIndex = entityClose.filter { it == Entity.ENEMY }.size.toDouble() / 4.0 // how dangerous entities around
         //val dangerIndex = entitiesDistancesAround.filter { isEnemy(it.key) }.size.toDouble() / ((2 * maxDistance) + 1) * ((2 * maxDistance) + 1)
@@ -70,21 +68,21 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
             playerResources = gs?.getPlayer(player)?.resources ?: 0
             unitResources = if (isMyBase(unit)) playerResources else unit.resources
 
-            canMove = unit.type.canMove && entityClose.contains(Entity.NONE)
-            canHarvest = unit.type.canHarvest && entityClose.contains(Entity.RESOURCE)
-            canProduce = entityClose.contains(Entity.NONE) && canAffordToProduce()
+            canMove = unit.type.canMove && entityClose.contains(Utils.Companion.Entity.NONE)
+            canHarvest = unit.type.canHarvest && entityClose.contains(Utils.Companion.Entity.RESOURCE)
+            canProduce = entityClose.contains(Utils.Companion.Entity.NONE) && canAffordToProduce()
         }
 
         // -------------------------------------------------------------------------------
 
-        parameters[Keys.ENEMY_CLOSE] = entityClose.contains(Entity.ENEMY) || entityClose.contains(Entity.ENEMY_BASE)
-        parameters[Keys.RESOURCE_CLOSE] = entityClose.contains(Entity.RESOURCE)
-        parameters[Keys.CARRY_RESOURCES] = unitResources != 0
-        parameters[Keys.EMPTY_AROUND] = entityClose.filter { it != Entity.ENEMY }.size == 4
-        parameters[Keys.SURROUNDED] = entityClose.filter { it == Entity.ENEMY }.size > 1
-        parameters[Keys.ENEMY_BASE_CLOSE] = entityClose.any { it == Entity.ENEMY_BASE }
-        parameters[Keys.FRIEND_CLOSE] = entityClose.any { it == Entity.FRIEND }
-        parameters[Keys.OVERPOWERED] = friendsEnemyRatio < 0
+        parameters[Utils.Companion.Keys.ENEMY_CLOSE] = entityClose.contains(Utils.Companion.Entity.ENEMY) || entityClose.contains(Utils.Companion.Entity.ENEMY_BASE)
+        parameters[Utils.Companion.Keys.RESOURCE_CLOSE] = entityClose.contains(Utils.Companion.Entity.RESOURCE)
+        parameters[Utils.Companion.Keys.CARRY_RESOURCES] = unitResources != 0
+        parameters[Utils.Companion.Keys.EMPTY_AROUND] = entityClose.filter { it != Utils.Companion.Entity.ENEMY }.size == 4
+        parameters[Utils.Companion.Keys.SURROUNDED] = entityClose.filter { it == Utils.Companion.Entity.ENEMY }.size > 1
+        parameters[Utils.Companion.Keys.ENEMY_BASE_CLOSE] = entityClose.any { it == Utils.Companion.Entity.ENEMY_BASE }
+        parameters[Utils.Companion.Keys.FRIEND_CLOSE] = entityClose.any { it == Utils.Companion.Entity.FRIEND }
+        parameters[Utils.Companion.Keys.OVERPOWERED] = friendsEnemyRatio < 0
     }
 
     private fun canAffordToProduce(): Boolean {
@@ -124,25 +122,25 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
                 .toMap()
     }
 
-    private fun getEntityOnPosition(position: Pair<Int, Int>): Entity {
+    private fun getEntityOnPosition(position: Pair<Int, Int>): Utils.Companion.Entity {
         if (getTerrain(position) == PhysicalGameState.TERRAIN_NONE) {
             val unitOnPosition = gs?.units?.filter { it.x == position.first && it.y == position.second }
 
-            if (unitOnPosition.isNullOrEmpty()) return Entity.NONE
-            if (unitOnPosition[0] == unit) return Entity.ME
+            if (unitOnPosition.isNullOrEmpty()) return Utils.Companion.Entity.NONE
+            if (unitOnPosition[0] == unit) return Utils.Companion.Entity.ME
 
             with(unitOnPosition[0]) {
                 if (player == -1) {
-                    writeToFile("Detected resource")
-                    return Entity.RESOURCE
+                    Utils.writeToFile("Detected resource")
+                    return Utils.Companion.Entity.RESOURCE
                 }
-                if (isMyBase(this)) return Entity.MY_BASE
-                if (isEnemyBase(this)) return Entity.ENEMY_BASE
-                return if (isEnemy(this)) Entity.ENEMY
-                else Entity.FRIEND
+                if (isMyBase(this)) return Utils.Companion.Entity.MY_BASE
+                if (isEnemyBase(this)) return Utils.Companion.Entity.ENEMY_BASE
+                return if (isEnemy(this)) Utils.Companion.Entity.ENEMY
+                else Utils.Companion.Entity.FRIEND
             }
         }
-        return Entity.WALL
+        return Utils.Companion.Entity.WALL
     }
 
     fun getUnitDistance(toUnit: Unit): Int {
@@ -155,11 +153,11 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         val directions = mutableListOf<Int>()
         if (unit == null) return directions
 
-        if (unit.y < toUnit.y) directions.add(DIRECTION_DOWN)
-        else if (unit.y > toUnit.y) directions.add(DIRECTION_UP)
+        if (unit.y < toUnit.y) directions.add(UnitAction.DIRECTION_DOWN)
+        else if (unit.y > toUnit.y) directions.add(UnitAction.DIRECTION_UP)
 
-        if (unit.x < toUnit.x) directions.add(DIRECTION_RIGHT)
-        else if (unit.x > toUnit.x) directions.add(DIRECTION_LEFT)
+        if (unit.x < toUnit.x) directions.add(UnitAction.DIRECTION_RIGHT)
+        else if (unit.x > toUnit.x) directions.add(UnitAction.DIRECTION_LEFT)
 
         if (reverse) {
             val reversedDirs = mutableListOf<Int>()
@@ -170,23 +168,23 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     }
 
     fun opposite(direction: Int): Int = when (direction) {
-        DIRECTION_LEFT -> DIRECTION_RIGHT
-        DIRECTION_RIGHT -> DIRECTION_LEFT
-        DIRECTION_UP -> DIRECTION_DOWN
-        DIRECTION_DOWN -> DIRECTION_UP
-        else -> DIRECTION_NONE
+        UnitAction.DIRECTION_LEFT -> UnitAction.DIRECTION_RIGHT
+        UnitAction.DIRECTION_RIGHT -> UnitAction.DIRECTION_LEFT
+        UnitAction.DIRECTION_UP -> UnitAction.DIRECTION_DOWN
+        UnitAction.DIRECTION_DOWN -> UnitAction.DIRECTION_UP
+        else -> UnitAction.DIRECTION_NONE
     }
 
     /**
      * Return entity on position relative to this unit.
      */
-    private fun getEntity(direction: Int, distance: Int): Entity =
+    private fun getEntity(direction: Int, distance: Int): Utils.Companion.Entity =
         getEntityOnPosition(calculateNextPosition(direction, distance))
 
     fun getEmptyDirection(): List<Int> {
         val emptyDirections = mutableListOf<Int>()
-        directionsWithoutNone.forEach {
-            if (getEntity(it, 1) == Entity.NONE)
+        Utils.directionsWithoutNone.forEach {
+            if (getEntity(it, 1) == Utils.Companion.Entity.NONE)
                 emptyDirections.add(it)
         }
         return emptyDirections
@@ -205,20 +203,22 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
     private fun calculateNextPosition(direction: Int, distance: Int): Pair<Int, Int> = if (unit != null) {
         val destinationX: Int = when (direction) {
-            DIRECTION_RIGHT -> unit.x + distance
-            DIRECTION_LEFT -> unit.x - distance
+            UnitAction.DIRECTION_RIGHT -> unit.x + distance
+            UnitAction.DIRECTION_LEFT -> unit.x - distance
             else -> unit.x
         }
 
         val destinationY: Int = when (direction) {
-            DIRECTION_DOWN -> unit.y + distance
-            DIRECTION_UP -> unit.y - distance
+            UnitAction.DIRECTION_DOWN -> unit.y + distance
+            UnitAction.DIRECTION_UP -> unit.y - distance
             else -> unit.y
         }
         Pair(destinationX, destinationY)
     } else Pair(0, 0)
 
-    fun compareTo(partialState: PartialState, abstractAction: AbstractAction): Double {
+    fun compareTo(partialState: PartialState, abstractAction: AbstractAction,
+                  strategy: Strategy? = null): Double {
+
         var result = 0
 
         partialState.parameters.keys.forEach {
@@ -228,17 +228,19 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
         // Detects invalid condition for this unit
         when (abstractAction.getUnitAction(this).type) {
-            TYPE_HARVEST -> if (canHarvest != true) return 0.0
-            TYPE_MOVE -> if (canMove != true) return 0.0
-            TYPE_ATTACK_LOCATION -> if (unit?.type?.canAttack != true) return 0.0
-            TYPE_RETURN -> if (baseDistance == null || unitResources == 0) return 0.0
-            TYPE_PRODUCE -> {
-
-            }
-            TYPE_NONE -> return 0.0
+            UnitAction.TYPE_HARVEST -> if (canHarvest != true) return 0.0
+            UnitAction.TYPE_MOVE -> if (canMove != true) return 0.0
+            UnitAction.TYPE_ATTACK_LOCATION -> if (unit?.type?.canAttack != true) return 0.0
+            UnitAction.TYPE_RETURN -> if (baseDistance == null || unitResources == 0) return 0.0
+            UnitAction.TYPE_NONE -> return 0.0
         }
 
-        return result.toDouble() / partialState.priority.toDouble()
+        if (strategy != null) {
+            return  (result.toDouble() / partialState.parameters.size) *
+                    strategy.evaluateAction(abstractAction)
+        }
+
+        return result.toDouble() / partialState.parameters.size
     }
 
     fun whatToProduce(): UnitType? {
@@ -250,14 +252,14 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         return null
     }
 
-    fun isEntity(unit: Unit, entity: Entity?): Boolean {
+    fun isEntity(unit: Unit, entity: Utils.Companion.Entity?): Boolean {
         if (entity == null) return false
         return when (entity) {
-            Entity.FRIEND -> isFriend(unit)
-            Entity.RESOURCE -> isResource(unit)
-            Entity.ENEMY -> isEnemy(unit)
-            Entity.ENEMY_BASE -> isEnemyBase(unit)
-            Entity.MY_BASE -> isMyBase(unit)
+            Utils.Companion.Entity.FRIEND -> isFriend(unit)
+            Utils.Companion.Entity.RESOURCE -> isResource(unit)
+            Utils.Companion.Entity.ENEMY -> isEnemy(unit)
+            Utils.Companion.Entity.ENEMY_BASE -> isEnemyBase(unit)
+            Utils.Companion.Entity.MY_BASE -> isMyBase(unit)
             else -> false
         }
     }

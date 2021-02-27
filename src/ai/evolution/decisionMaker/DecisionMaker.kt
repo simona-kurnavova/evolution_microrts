@@ -1,28 +1,39 @@
-package ai.evolution.condition
+package ai.evolution.decisionMaker
 
-import ai.evolution.TrainingUtils.COND_MUT_PROB
-import ai.evolution.Utils.Companion.actionFile
+import ai.evolution.decisionMaker.TrainingUtils.COND_MUT_PROB
 import ai.evolution.Utils.Companion.coinToss
-import ai.evolution.Utils.Companion.writeToFile
-import ai.evolution.condition.action.AbstractAction
-import ai.evolution.condition.state.PartialState
-import ai.evolution.condition.state.State
+import ai.evolution.decisionMaker.TrainingUtils.STRATEGY_AI
+import ai.evolution.strategyDecisionMaker.GlobalState
+import ai.evolution.strategyDecisionMaker.PartialGlobalState
+import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
+import ai.evolution.strategyDecisionMaker.StrategyTrainingUtils
 import com.google.gson.Gson
 
 class DecisionMaker(conditionCount: Int = 0) {
 
     val conditions: MutableList<Condition> = mutableListOf()
 
+    var strategyDecisionMaker: StrategyDecisionMaker? = null
+
     init {
         repeat(conditionCount) { conditions.add(Condition()) }
+        if (STRATEGY_AI)
+            strategyDecisionMaker = StrategyDecisionMaker(StrategyTrainingUtils.CONDITION_COUNT)
     }
 
     fun decide(realState: State): List<Pair<Condition, Double>> = conditions.map {
         it to realState.compareTo(it.partialState, it.abstractAction)
     }.toList().shuffled().sortedByDescending { (_, value) -> value }
 
+    fun decide(realState: State, globalState: GlobalState): List<Pair<Condition, Double>> =
+        conditions.map {
+            it to realState.compareTo(it.partialState, it.abstractAction,
+            strategyDecisionMaker?.decide(globalState)?.first?.strategy)
+        }.toList().shuffled().sortedByDescending { (_, value) -> value }
+
     fun mutate() {
         conditions.forEach { if (coinToss(COND_MUT_PROB)) it.mutate() }
+        strategyDecisionMaker?.mutate()
     }
 
     fun crossover(decisionMaker: DecisionMaker): DecisionMaker {
@@ -32,6 +43,10 @@ class DecisionMaker(conditionCount: Int = 0) {
             child.addCondition(listOf(conditions[i], decisionMaker.conditions[i]).random())
             child.conditions[i].usedCount = 0
         }
+
+        // For strategy AI only, nulls otherwise
+        child.strategyDecisionMaker =
+                strategyDecisionMaker?.crossover(decisionMaker.strategyDecisionMaker!!)
         return child
     }
 
@@ -52,28 +67,9 @@ class DecisionMaker(conditionCount: Int = 0) {
      * Used when adding a condiition from parent during crossover - creates deep copy.
      */
     private fun addCondition(cond: Condition) {
-        val cond2 = Condition()
-        /*val gson = Gson()
+        val gson = Gson()
         val conditionJson = gson.toJson(cond)
         val conditionCopy = gson.fromJson(conditionJson, Condition::class.java)
-        conditions.add(conditionCopy)*/
-
-        cond2.usedCount = 0
-
-        val abstractAction = AbstractAction()
-        abstractAction.action = cond.abstractAction.action
-        abstractAction.type = cond.abstractAction.type
-        abstractAction.entity = cond.abstractAction.entity
-        cond2.abstractAction = abstractAction
-
-        val partialState = PartialState()
-        partialState.parameters.clear()
-
-        cond.partialState.parameters.forEach {
-            partialState.parameters[it.key] = it.value
-        }
-        cond2.partialState = partialState
-        cond2.partialState.priority = partialState.parameters.size
-        conditions.add(cond2)
+        conditions.add(conditionCopy)
     }
 }

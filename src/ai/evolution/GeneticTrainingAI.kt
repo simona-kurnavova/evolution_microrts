@@ -1,33 +1,35 @@
 package ai.evolution
 
-import ai.evolution.TrainingUtils.ACTIVE_START
-import ai.evolution.TrainingUtils.BEST_AI_EPOCH
-import ai.evolution.TrainingUtils.CANDIDATE_COUNT
-import ai.evolution.TrainingUtils.CONDITION_COUNT
-import ai.evolution.TrainingUtils.CORES_COUNT
-import ai.evolution.TrainingUtils.EPOCH_COUNT
-import ai.evolution.TrainingUtils.HEADLESS
-import ai.evolution.TrainingUtils.MAP_LOCATION
-import ai.evolution.TrainingUtils.MAX_CYCLES
+import ai.evolution.decisionMaker.TrainingUtils.ACTIVE_START
+import ai.evolution.decisionMaker.TrainingUtils.BEST_AI_EPOCH
+import ai.evolution.decisionMaker.TrainingUtils.CANDIDATE_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.CONDITION_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.CORES_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.EPOCH_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.HEADLESS
+import ai.evolution.decisionMaker.TrainingUtils.MAP_LOCATION
+import ai.evolution.decisionMaker.TrainingUtils.MAX_CYCLES
 import ai.evolution.Utils.Companion.EvaluatedCandidate
-import ai.evolution.TrainingUtils.PARENT_COUNT
-import ai.evolution.TrainingUtils.PARTIALLY_OBSERVABLE
-import ai.evolution.TrainingUtils.POPULATION
-import ai.evolution.TrainingUtils.SLOW_TESTING
+import ai.evolution.decisionMaker.TrainingUtils.PARENT_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.PARTIALLY_OBSERVABLE
+import ai.evolution.decisionMaker.TrainingUtils.POPULATION
+import ai.evolution.decisionMaker.TrainingUtils.SLOW_TESTING
 import ai.evolution.Utils.Companion.PlayerStatistics
-import ai.evolution.TrainingUtils.TESTING_RUNS
-import ai.evolution.TrainingUtils.UPDATE_INTERVAL
-import ai.evolution.TrainingUtils.UTT_VERSION
-import ai.evolution.TrainingUtils.getActiveAIS
-import ai.evolution.TrainingUtils.getFastTestingAIs
-import ai.evolution.TrainingUtils.getPassiveAIS
-import ai.evolution.TrainingUtils.getSlowTestingAIs
-import ai.evolution.TrainingUtils.printInfo
-import ai.evolution.Utils.Companion.actionFile
+import ai.evolution.Utils.Companion.averageBestFile
+import ai.evolution.decisionMaker.TrainingUtils.TESTING_RUNS
+import ai.evolution.decisionMaker.TrainingUtils.UPDATE_INTERVAL
+import ai.evolution.decisionMaker.TrainingUtils.UTT_VERSION
+import ai.evolution.decisionMaker.TrainingUtils.getActiveAIS
+import ai.evolution.decisionMaker.TrainingUtils.getFastTestingAIs
+import ai.evolution.decisionMaker.TrainingUtils.getPassiveAIS
+import ai.evolution.decisionMaker.TrainingUtils.getSlowTestingAIs
+import ai.evolution.decisionMaker.TrainingUtils.printInfo
 import ai.evolution.Utils.Companion.conditionsFile
 import ai.evolution.Utils.Companion.evalFile
+import ai.evolution.Utils.Companion.writeEverywhere
 import ai.evolution.Utils.Companion.writeToFile
-import ai.evolution.condition.DecisionMaker
+import ai.evolution.decisionMaker.DecisionMaker
+import ai.evolution.decisionMaker.TrainingUtils.RUNS
 import com.google.gson.Gson
 import rts.ActionStatistics
 import rts.Game
@@ -47,23 +49,38 @@ class GeneticTrainingAI(val gameSettings: GameSettings) {
     private var childrenFitnessList = mutableListOf<EvaluatedCandidate>()
     private var bestCandidate: EvaluatedCandidate? = null
 
+    // for multiple run
+    private var averageBestFitness = mutableListOf<Double>()
+
     fun train() {
-        writeToFile(printInfo())
-        initialisePopulation()
+        repeat(RUNS) {
+            writeEverywhere("\nRun $it")
+            writeToFile(printInfo())
+            initialisePopulation()
 
-        for (epoch in 0 until EPOCH_COUNT) {
-            writeToFile("Epoch $epoch")
-            candidatesFitnessList = evaluateFitness(candidates, epoch) // Evaluate fitness of candidates
-            printFitnessStats()
+            for (epoch in 0 until EPOCH_COUNT) {
+                writeEverywhere("Epoch $epoch")
 
-            val children = crossover() // Crossover between candidates
-            children.forEach { it.mutate() } // Mutate children
-            childrenFitnessList = evaluateFitness(children, epoch) // Evaluate children
-            writeToFile("--- CHILDREN: ${childrenFitnessList.sumByDouble { it.fitness } / childrenFitnessList.size} " +
-                    "wins: ${childrenFitnessList.sumByDouble { it.wins.toDouble() } / childrenFitnessList.size}")
+                candidatesFitnessList = evaluateFitness(candidates, epoch) // Evaluate fitness of candidates
+                printFitnessStats()
 
-            if (epoch >= BEST_AI_EPOCH && saveBestIfFound()) return
-            selectNewPopulation() // Selection
+                if (averageBestFitness.size >= epoch + 1)
+                    averageBestFitness[epoch] += candidatesFitnessList[0].fitness
+                else averageBestFitness.add(candidatesFitnessList[0].fitness)
+
+                val children = crossover() // Crossover between candidates
+                children.forEach { it.mutate() } // Mutate children
+                childrenFitnessList = evaluateFitness(children, epoch) // Evaluate children
+                writeToFile("--- CHILDREN: ${childrenFitnessList.sumByDouble { it.fitness } / childrenFitnessList.size} " +
+                        "wins: ${childrenFitnessList.sumByDouble { it.wins.toDouble() } / childrenFitnessList.size}")
+
+                if (epoch >= BEST_AI_EPOCH && saveBestIfFound()) break
+                selectNewPopulation() // Selection
+            }
+        }
+        // Print fitness from multiple runs
+        averageBestFitness.take(BEST_AI_EPOCH).forEach {
+            writeToFile("--- BEST: ${it / RUNS}", averageBestFile)
         }
     }
 
@@ -88,7 +105,7 @@ class GeneticTrainingAI(val gameSettings: GameSettings) {
             writeToFile("Found best unit of Fitness: " + "${best.fitness}")
 
             // Save best unit to file
-            conditionsFile.delete() // delete existig file first
+            conditionsFile.delete() // delete existing file first
             writeToFile(Gson().toJson(best.decisionMaker).toString(), conditionsFile)
             return true
         }
@@ -99,6 +116,7 @@ class GeneticTrainingAI(val gameSettings: GameSettings) {
      * Initialise random population of [POPULATION] size with [CONDITION_COUNT] number of conditions for each unit.
      */
     private fun initialisePopulation() {
+        candidates.clear()
         repeat(POPULATION) { candidates.add(DecisionMaker(CONDITION_COUNT)) }
     }
 
@@ -120,8 +138,10 @@ class GeneticTrainingAI(val gameSettings: GameSettings) {
                 AIs.forEach { ai ->
                     val player = listOf(0, 1).random()
                     val game = if (player == 0) {
-                        Game(gameSettings, GeneticAI(it, UnitTypeTable(gameSettings.uttVersion)), ai.first)
-                    } else Game(gameSettings, ai.first, GeneticAI(it, UnitTypeTable(gameSettings.uttVersion)))
+                        Game(gameSettings,
+                                GeneticAI(it, UnitTypeTable(gameSettings.uttVersion)), ai.first)
+                    } else Game(gameSettings, ai.first,
+                            GeneticAI(it, UnitTypeTable(gameSettings.uttVersion)))
 
                     try {
                         val actionStatistics = game.start()
@@ -139,9 +159,7 @@ class GeneticTrainingAI(val gameSettings: GameSettings) {
         }
 
         evaluatedCandidates.sortByDescending{ it.wins; it.fitness }
-        evaluatedCandidates.forEach {
-            writeToFile("${it.wins}, ${it.fitness}", actionFile)
-        }
+
         if (bestCandidate == null || bestCandidate!!.fitness <= evaluatedCandidates[0].fitness && epoch >= ACTIVE_START) {
             bestCandidate = evaluatedCandidates[0]
         }
@@ -261,7 +279,7 @@ class GeneticTrainingAI(val gameSettings: GameSettings) {
     }
 
     private fun printFitnessStats() {
-        writeToFile("--- BEST: ${candidatesFitnessList[0].fitness} wins: ${candidatesFitnessList[0].wins}")
+        writeEverywhere("--- BEST: ${candidatesFitnessList[0].fitness} wins: ${candidatesFitnessList[0].wins}")
         writeToFile("--- WORST: ${candidatesFitnessList[candidatesFitnessList.size - 1].fitness}")
         writeToFile("--- AVG: ${
             candidatesFitnessList.sumByDouble { it.fitness } /

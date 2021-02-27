@@ -1,18 +1,20 @@
 package ai.evolution
 
-import ai.evolution.TrainingUtils.ACTIVE_START
-import ai.evolution.TrainingUtils.ALLOW_WORKERS_ONLY
-import ai.evolution.TrainingUtils.BEST_AI_EPOCH
-import ai.evolution.TrainingUtils.CANDIDATE_COUNT
-import ai.evolution.TrainingUtils.CONDITION_COUNT
-import ai.evolution.TrainingUtils.COND_MUT_PROB
-import ai.evolution.TrainingUtils.EPOCH_COUNT
-import ai.evolution.TrainingUtils.POPULATION
-import ai.evolution.TrainingUtils.PROB_BASE_ATTACK
-import ai.evolution.TrainingUtils.TOURNAMENT_START
-import ai.evolution.TrainingUtils.MAP_WIDTH
-import ai.evolution.TrainingUtils.UTT_VERSION
-import ai.evolution.condition.DecisionMaker
+import ai.evolution.decisionMaker.TrainingUtils.ACTIVE_START
+import ai.evolution.decisionMaker.TrainingUtils.ALLOW_WORKERS_ONLY
+import ai.evolution.decisionMaker.TrainingUtils.BEST_AI_EPOCH
+import ai.evolution.decisionMaker.TrainingUtils.CANDIDATE_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.CONDITION_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.COND_MUT_PROB
+import ai.evolution.decisionMaker.TrainingUtils.EPOCH_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.POPULATION
+import ai.evolution.decisionMaker.TrainingUtils.PROB_BASE_ATTACK
+import ai.evolution.decisionMaker.TrainingUtils.TOURNAMENT_START
+import ai.evolution.decisionMaker.TrainingUtils.MAP_WIDTH
+import ai.evolution.decisionMaker.TrainingUtils.UTT_VERSION
+import ai.evolution.decisionMaker.DecisionMaker
+import ai.evolution.decisionMaker.TrainingUtils.STRATEGY_AI
+import ai.evolution.strategyDecisionMaker.StrategyTrainingUtils
 import rts.GameState
 import rts.UnitAction.*
 import rts.units.Unit
@@ -31,9 +33,10 @@ class Utils {
          */
         const val ROOT_OUTPUT_FOLDER =
                 "output/${POPULATION}_${CONDITION_COUNT}_${COND_MUT_PROB}_${PROB_BASE_ATTACK}" +
-                        "_${CANDIDATE_COUNT}_${!ALLOW_WORKERS_ONLY}_${ACTIVE_START}" +
+                        "_${CANDIDATE_COUNT}_${ALLOW_WORKERS_ONLY}_${ACTIVE_START}" +
                         "_${BEST_AI_EPOCH}_${EPOCH_COUNT}_${TOURNAMENT_START}" +
-                        "_${UTT_VERSION}_${MAP_WIDTH}x${MAP_WIDTH}"
+                        "_${UTT_VERSION}_${MAP_WIDTH}x${MAP_WIDTH}_strat=${STRATEGY_AI}_" +
+                        "${StrategyTrainingUtils.CONDITION_COUNT}"
 
         /**
          * Progress of fitness and victories throughout the training.
@@ -49,6 +52,8 @@ class Utils {
          * Final evaluation/testing result of best decision maker.
          */
         val evalFile = File("$ROOT_OUTPUT_FOLDER/evaluation")
+
+        val averageBestFile = File("$ROOT_OUTPUT_FOLDER/average_best_fitness")
 
         val actionFile = File("$ROOT_OUTPUT_FOLDER/actions")
 
@@ -105,6 +110,11 @@ class Utils {
                 File(ROOT_OUTPUT_FOLDER).mkdirs()
                 file.writeText("$text\n")
             }
+        }
+
+        fun writeEverywhere(text: String) {
+            writeToFile(text)
+            println(text)
         }
     }
 }

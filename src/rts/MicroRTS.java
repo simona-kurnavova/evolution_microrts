@@ -1,6 +1,6 @@
 package rts;
 
-import gui.frontend.FrontEnd;
+//import gui.frontend.FrontEnd;
 import gui.frontend.TrainingUI;
 
 import java.net.ServerSocket;
@@ -41,7 +41,7 @@ public class MicroRTS {
         System.out.println(gameSettings);
 
         switch (gameSettings.getLaunchMode()) {
-            case STANDALONE:
+            /*case STANDALONE:
             case HUMAN:
                 runStandAloneGame(gameSettings);
                 break;
@@ -53,7 +53,7 @@ public class MicroRTS {
                 break;
             case CLIENT:
                 startClient(gameSettings);
-                break;
+                break;*/
             case TRAIN:
                 TrainingUI.Companion.train(gameSettings);
                 break;

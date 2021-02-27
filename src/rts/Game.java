@@ -1,7 +1,6 @@
 package rts;
 
 import ai.core.AI;
-import ai.evolution.TrainingUtils;
 import gui.PhysicalGameStatePanel;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;

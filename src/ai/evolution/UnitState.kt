@@ -1,6 +1,6 @@
 package ai.evolution
 
-import ai.evolution.TrainingUtils.MAP_WIDTH
+import ai.evolution.decisionMaker.TrainingUtils.MAP_WIDTH
 import rts.GameState
 import rts.PhysicalGameState.TERRAIN_NONE
 import rts.PhysicalGameState.TERRAIN_WALL
