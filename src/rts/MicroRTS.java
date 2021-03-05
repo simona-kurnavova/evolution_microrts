@@ -65,6 +65,8 @@ public class MicroRTS {
                 break;
             case RUN:
                 TrainingUI.Companion.runGame(gameSettings);
+            case TRAIN_NEAT:
+                TrainingUI.Companion.trainNEAT(gameSettings);
         }
     }
 

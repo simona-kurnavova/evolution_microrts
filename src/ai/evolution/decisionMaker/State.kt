@@ -263,4 +263,14 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
             else -> false
         }
     }
+
+    fun getInputs(): Array<Float> {
+        val list = mutableListOf<Float>()
+        parameters.forEach {
+            list.add(it.value.toInt().toFloat())
+        }
+        return list.toTypedArray()
+    }
+
+    private fun Boolean.toInt() = if (this) 1 else 0
 }

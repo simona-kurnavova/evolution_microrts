@@ -1,5 +1,6 @@
 package ai.evolution
 
+import ai.evolution.decisionMaker.TrainingUtils
 import ai.evolution.decisionMaker.TrainingUtils.ACTIVE_START
 import ai.evolution.decisionMaker.TrainingUtils.ALLOW_WORKERS_ONLY
 import ai.evolution.decisionMaker.TrainingUtils.BEST_AI_EPOCH
@@ -11,9 +12,11 @@ import ai.evolution.decisionMaker.TrainingUtils.POPULATION
 import ai.evolution.decisionMaker.TrainingUtils.PROB_BASE_ATTACK
 import ai.evolution.decisionMaker.TrainingUtils.TOURNAMENT_START
 import ai.evolution.decisionMaker.TrainingUtils.MAP_WIDTH
+import ai.evolution.decisionMaker.TrainingUtils.RUNS
 import ai.evolution.decisionMaker.TrainingUtils.UTT_VERSION
-import ai.evolution.decisionMaker.DecisionMaker
+import ai.evolution.decisionMaker.UnitDecisionMaker
 import ai.evolution.decisionMaker.TrainingUtils.STRATEGY_AI
+import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 import ai.evolution.strategyDecisionMaker.StrategyTrainingUtils
 import rts.GameState
 import rts.UnitAction.*
@@ -25,18 +28,24 @@ import kotlin.random.Random
 
 class Utils {
     companion object {
-        data class EvaluatedCandidate(var decisionMaker: DecisionMaker, var fitness: Double, var wins: Int)
+
+        class UnitCandidate(var unitDecisionMaker: UnitDecisionMaker,
+                            var fitness: Double, var wins: Int)
+
+        data class StrategyCandidate(var strategyDecisionMaker: StrategyDecisionMaker,
+                                     var fitness: Double, var wins: Int)
+
         data class PlayerStatistics(val id: Int, val units: List<Unit?>?, val hp: Int, val hpBase: Int)
 
         /**
          * Root folder for this run output files.
          */
-        const val ROOT_OUTPUT_FOLDER =
-                "output/${POPULATION}_${CONDITION_COUNT}_${COND_MUT_PROB}_${PROB_BASE_ATTACK}" +
+        val ROOT_OUTPUT_FOLDER =
+                "output/${TrainingUtils.AI.name}_${POPULATION}_${CONDITION_COUNT}_${COND_MUT_PROB}_${PROB_BASE_ATTACK}" +
                         "_${CANDIDATE_COUNT}_${ALLOW_WORKERS_ONLY}_${ACTIVE_START}" +
                         "_${BEST_AI_EPOCH}_${EPOCH_COUNT}_${TOURNAMENT_START}" +
                         "_${UTT_VERSION}_${MAP_WIDTH}x${MAP_WIDTH}_strat=${STRATEGY_AI}_" +
-                        "${StrategyTrainingUtils.CONDITION_COUNT}"
+                        "${StrategyTrainingUtils.CONDITION_COUNT}_RUNS${RUNS}"
 
         /**
          * Progress of fitness and victories throughout the training.
@@ -112,8 +121,8 @@ class Utils {
             }
         }
 
-        fun writeEverywhere(text: String) {
-            writeToFile(text)
+        fun writeEverywhere(text: String, file: File = mainFile) {
+            writeToFile(text, file)
             println(text)
         }
     }

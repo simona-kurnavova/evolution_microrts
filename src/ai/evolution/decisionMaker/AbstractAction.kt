@@ -38,7 +38,7 @@ class AbstractAction {
         }
     }
 
-    private fun onActionChangeSetup() {
+    fun onActionChangeSetup() {
         type = Type.TO_ENTITY
         when (action) {
             UnitAction.TYPE_PRODUCE -> unitToProduce = if (TrainingUtils.ALLOW_WORKERS_ONLY) "Worker"

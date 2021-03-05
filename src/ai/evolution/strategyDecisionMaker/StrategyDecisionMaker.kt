@@ -1,21 +1,20 @@
 package ai.evolution.strategyDecisionMaker
 
+import ai.evolution.DecisionMaker
 import ai.evolution.Utils.Companion.coinToss
 import ai.evolution.strategyDecisionMaker.StrategyTrainingUtils.COND_MUT_PROB
 import com.google.gson.Gson
 
-class StrategyDecisionMaker(conditionCount: Int = 0) {
-    private val conditions = mutableListOf<StrategyCondition>()
+class StrategyDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
+    val conditions = mutableListOf<StrategyCondition>()
 
-    init {
-        repeat(conditionCount) {conditions.add(StrategyCondition())}
-    }
+    init { repeat(conditionCount) { conditions.add(StrategyCondition()) } }
 
     fun decide(globalState: GlobalState): Pair<StrategyCondition, Double> =
-        conditions.map { it to globalState.compareTo(it.partialGlobalState) }
-                .toList().shuffled().sortedByDescending { (_, value) -> value }.first()
+            conditions.map { it to globalState.compareTo(it.partialGlobalState) }
+                    .toList().shuffled().maxByOrNull { (_, value) -> value }!!
 
-    fun mutate() {
+    override fun mutate() {
         conditions.forEach { if (coinToss(COND_MUT_PROB)) it.mutate() }
     }
 

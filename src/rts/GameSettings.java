@@ -33,7 +33,8 @@ public class GameSettings {
         TRAIN_TEST,
         TEST,
         TRAIN,
-        RUN
+        RUN,
+        TRAIN_NEAT
     }
 
     // Networking
