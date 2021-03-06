@@ -1,12 +1,11 @@
 package ai.evolution.neat
 
-import ai.evolution.Utils
 import ai.evolution.Utils.Companion.writeEverywhere
 import ai.evolution.Utils.Companion.writeToFile
 import ai.evolution.decisionMaker.TrainingUtils.CORES_COUNT
-import ai.evolution.decisionMaker.TrainingUtils.POPULATION
 import ai.evolution.decisionMaker.TrainingUtils.getActiveAIS
 import ai.evolution.neat.NEAT_Config.HIDDEN_NODES
+import ai.evolution.neat.NEAT_Config.POPULATION
 import ai.evolution.operators.Fitness
 import ai.evolution.runners.GameRunner
 import com.google.gson.Gson

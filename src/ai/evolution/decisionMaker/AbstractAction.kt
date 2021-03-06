@@ -43,17 +43,22 @@ class AbstractAction {
         when (action) {
             UnitAction.TYPE_PRODUCE -> unitToProduce = if (TrainingUtils.ALLOW_WORKERS_ONLY) "Worker"
             else UnitTypeTable(TrainingUtils.UTT_VERSION).unitTypes.random().name
-            UnitAction.TYPE_HARVEST -> entity = Utils.Companion.Entity.RESOURCE // Harvest nearest resource
-            UnitAction.TYPE_ATTACK_LOCATION -> entity = if (Utils.coinToss(TrainingUtils.PROB_BASE_ATTACK)) Utils.Companion.Entity.ENEMY_BASE else Utils.Companion.Entity.ENEMY
-            UnitAction.TYPE_RETURN -> entity = Utils.Companion.Entity.MY_BASE
+            UnitAction.TYPE_ATTACK_LOCATION -> entity = if (Utils.coinToss(TrainingUtils.PROB_BASE_ATTACK))
+                Utils.Companion.Entity.ENEMY_BASE else Utils.Companion.Entity.ENEMY
             UnitAction.TYPE_MOVE -> {
                 entity = if (entity != null) entity else Utils.entitiesWithoutMe.random()
                 type = types.random()
             }
         }
+        forceConsistency()
+    }
 
-        if (action != UnitAction.TYPE_PRODUCE)
-            unitToProduce = null
+    fun forceConsistency() {
+        when (action) {
+            UnitAction.TYPE_HARVEST -> entity = Utils.Companion.Entity.RESOURCE // Harvest nearest resource
+            UnitAction.TYPE_RETURN -> entity = Utils.Companion.Entity.MY_BASE
+        }
+        if (action != UnitAction.TYPE_PRODUCE) unitToProduce = null
     }
 
     private fun getEntityAction(realState: State, unitFilter: (Unit) -> Boolean, reverseDirection: Boolean = false): UnitAction {

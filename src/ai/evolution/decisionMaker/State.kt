@@ -9,6 +9,7 @@ import rts.PhysicalGameState
 import rts.UnitAction
 import rts.units.Unit
 import rts.units.UnitType
+import rts.units.UnitTypeTable
 import kotlin.math.abs
 
 open class State(val player: Int? = null, val gs: GameState? = null, val unit: Unit? = null) {
@@ -267,10 +268,13 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     fun getInputs(): Array<Float> {
         val list = mutableListOf<Float>()
         parameters.forEach {
-            list.add(it.value.toInt().toFloat())
+            list.add(it.value.toFloat())
+        }
+        gs?.unitTypeTable?.unitTypes?.forEach {
+            list.add((unit?.type?.name == it.name).toFloat())
         }
         return list.toTypedArray()
     }
 
-    private fun Boolean.toInt() = if (this) 1 else 0
+    private fun Boolean.toFloat() = if (this) 1.toFloat() else 0.toFloat()
 }
