@@ -35,17 +35,20 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
         val evaluatedCandidates = mutableListOf<Utils.Companion.UnitCandidate>()
         val ais = getTrainingAIs(epoch)
 
-        prepareCandidates(candidates, children).chunked(TrainingUtils.CORES_COUNT).forEach { list ->
+        prepareCandidates(candidates, children)
+                .chunked(TrainingUtils.CORES_COUNT)
+                .forEach { list ->
             list.parallelStream().forEach {
                 val fitnessEval = gameRunner.runGameForAIs(gameRunner.getEvaluateLambda(it), ais)
                 evaluatedCandidates.add(Utils.Companion.UnitCandidate(it, fitnessEval.first, fitnessEval.second))
             }
         }
-        evaluatedCandidates.sortByDescending{ it.wins; it.fitness }
+        evaluatedCandidates.sortByDescending{ it.fitness; it.wins }
+        //val best = evaluatedCandidates.maxByOrNull { it.fitness; it.wins }
 
-        if (bestCandidate == null || bestCandidate!!.fitness <= evaluatedCandidates[0].fitness && epoch >= TrainingUtils.ACTIVE_START) {
-            bestCandidate = evaluatedCandidates[0]
-        }
+        /*if (bestCandidate == null || bestCandidate!!.fitness <= best!!.fitness && epoch >= TrainingUtils.ACTIVE_START) {
+            bestCandidate = best
+        }*/
         return prepareEvaluatedCandidates(evaluatedCandidates, children)
     }
 

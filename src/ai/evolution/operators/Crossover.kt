@@ -17,13 +17,16 @@ object Crossover {
     fun tournament(candidatesFitnessList: MutableList<Utils.Companion.UnitCandidate>): MutableList<UnitDecisionMaker> {
         val children = mutableListOf<UnitDecisionMaker>()
         repeat(POPULATION) {
-            val parentCandidates = candidatesFitnessList.shuffled()
+            val parentCandidates = candidatesFitnessList
+                    .shuffled()
                     .take(PARENT_COUNT * CANDIDATE_COUNT)
                     .chunked(PARENT_COUNT)
             val parents = mutableListOf<Utils.Companion.UnitCandidate>()
             parentCandidates.forEach { parents.add(it.maxByOrNull { it.fitness }!!) }
+
             // Add child and MUTATE it
-            children.add(parents[0].unitDecisionMaker.crossover(parents[1].unitDecisionMaker).apply { mutate() })
+            children.add(parents[0].unitDecisionMaker.crossover(parents[1].unitDecisionMaker)
+                    .apply { mutate() })
         }
         return children
     }

@@ -15,8 +15,6 @@ class UnitDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
 
     init {
         repeat(conditionCount) { conditions.add(Condition()) }
-        //if (STRATEGY_AI)
-        //    this.strategyDecisionMaker = StrategyDecisionMaker(StrategyTrainingUtils.CONDITION_COUNT)
     }
 
     override fun mutate() {
@@ -29,7 +27,6 @@ class UnitDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
 
         for (i in conditions.indices) {
             child.addCondition(listOf(conditions[i], decisionMaker.conditions[i]).random())
-            child.conditions[i].usedCount = 0
         }
 
         // For strategy AI only, nulls otherwise
@@ -56,18 +53,5 @@ class UnitDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
         val conditionJson = gson.toJson(cond)
         val conditionCopy = gson.fromJson(conditionJson, Condition::class.java)
         conditions.add(conditionCopy)
-    }
-
-    fun getCountUsedConditions(): Double =
-            conditions.filter { it.usedCount > 0 }.size.toDouble() / conditions.size.toDouble()
-
-    fun setUnused() {
-        conditions.forEach { it.usedCount = 0 }
-    }
-
-    override fun toString(): String {
-        var string = ""
-        conditions.forEach { string += it.toString() }
-        return string
     }
 }

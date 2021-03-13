@@ -2,17 +2,27 @@ package ai.evolution.decisionMaker
 
 import ai.evolution.Utils.Companion.coinToss
 import ai.evolution.Utils.Companion.keys
+import ai.evolution.decisionMaker.TrainingUtils.UTT_VERSION
+import rts.units.UnitTypeTable
 
 /**
  * State used in condition for comparison with real state of game.
  */
 class PartialState : State() {
 
+    //var unitType: String = getRandomUnit()
+
+    private fun getRandomUnit(): String =
+            UnitTypeTable(UTT_VERSION).unitTypes.filter { it.name != "resource" }.random().name
+
     init {
         parameters[keys.random()] = listOf(true, false).random()
     }
 
     fun mutate() {
+        //if (coinToss(0.2))
+        //    unitType = getRandomUnit()
+
         if (coinToss(0.4) && parameters.keys.size > 1) {
             // Remove one key
             parameters.remove(parameters.keys.random())
@@ -29,15 +39,6 @@ class PartialState : State() {
                 }
             }
         }
-    }
-
-    override fun toString(): String {
-        var string = ""
-        keys.forEach {
-            if (parameters.containsKey(it))
-                string += "${it.name}=${parameters[it]}, "
-        }
-        return string
     }
 
     companion object {

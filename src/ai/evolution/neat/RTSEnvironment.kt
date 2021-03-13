@@ -2,13 +2,15 @@ package ai.evolution.neat
 
 import ai.evolution.Utils.Companion.writeEverywhere
 import ai.evolution.Utils.Companion.writeToFile
+import ai.evolution.decisionMaker.TrainingUtils
 import ai.evolution.decisionMaker.TrainingUtils.CORES_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.EPOCH_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.RUNS
 import ai.evolution.decisionMaker.TrainingUtils.getActiveAIS
 import ai.evolution.neat.NEAT_Config.HIDDEN_NODES
 import ai.evolution.neat.NEAT_Config.POPULATION
 import ai.evolution.operators.Fitness
 import ai.evolution.runners.GameRunner
-import com.google.gson.Gson
 import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
@@ -29,25 +31,33 @@ class RTSEnvironment(gameSettings: GameSettings) : Environment {
     }
 
     companion object {
-        private const val EPOCHS = 2000
-        private const val neatRoot = "output/NEAT_pop=${POPULATION}_hidden=${HIDDEN_NODES}epochs=$EPOCHS"
+        private const val neatRoot = "output/NEAT_pop=${POPULATION}_hidden=${HIDDEN_NODES}epochs=$EPOCH_COUNT"
         private val neatEpochsFile = File("$neatRoot/epochs")
         private val neatBestFile = File("$neatRoot/best_genome")
-
+        private val neatAverageBestFile = File("$neatRoot/average_best")
 
         fun train(gameSettings: GameSettings) {
             File(neatRoot).mkdirs()
-            val rtsEnvironment = RTSEnvironment(gameSettings)
-            val pool = Pool().apply { initializePool() }
-            var topGenome: Genome = Genome()
+            val fitnessSum = mutableMapOf<Int, Float>()
 
-            repeat(EPOCHS) {
-                pool.evaluateFitness(rtsEnvironment)
-                topGenome = pool.topGenome
-                writeEverywhere("$it BEST: ${topGenome.points}", neatEpochsFile)
-                pool.breedNewGeneration()
+            repeat(RUNS) { _ ->
+                val rtsEnvironment = RTSEnvironment(gameSettings)
+                val pool = Pool().apply { initializePool() }
+                var topGenome = Genome()
+
+                repeat(TrainingUtils.EPOCH_COUNT) { epoch ->
+                    pool.evaluateFitness(rtsEnvironment)
+                    topGenome = pool.topGenome
+                    writeEverywhere("$epoch BEST: ${topGenome.points}", neatEpochsFile)
+                    if (!fitnessSum.containsKey(epoch)) fitnessSum[epoch] = 0F
+                    fitnessSum[epoch] = fitnessSum[epoch]!! + topGenome.points
+                    pool.breedNewGeneration()
+                }
+                //writeToFile(Gson().toJson(topGenome).toString(), neatBestFile)
             }
-            writeToFile(Gson().toJson(topGenome).toString(), neatBestFile)
+            fitnessSum.forEach {
+                writeToFile("${it.key} BEST ${it.value / RUNS}", neatAverageBestFile)
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ import ai.evolution.decisionMaker.UnitDecisionMaker
 import ai.evolution.decisionMaker.TrainingUtils.ACTIVE_START
 import ai.evolution.decisionMaker.TrainingUtils.getActiveAIS
 import ai.evolution.decisionMaker.TrainingUtils.getPassiveAIS
+import ai.evolution.Utils.Companion.UnitCandidate
 import ai.evolution.operators.Crossover
 import ai.evolution.operators.Fitness
 import ai.evolution.operators.Initialisation
@@ -14,17 +15,21 @@ import rts.GameSettings
 
 open class GeneticTrainingAI(gameSettings: GameSettings) : TrainingAI(gameSettings) {
 
+    init {
+        println("GeneticTrainingAI")
+    }
+
     override fun initialisePopulation(): MutableList<UnitDecisionMaker> =
             Initialisation.simpleInit()
 
     override fun calculateFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> =
             Fitness.basicFitness(game, playerStats, player, epoch)
 
-    override fun crossover(candidatesFitnessList: MutableList<Utils.Companion.UnitCandidate>): MutableList<UnitDecisionMaker> =
+    override fun crossover(candidatesFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker> =
             Crossover.tournament(candidatesFitnessList)
 
-    override fun selection(candidatesFitnessList: MutableList<Utils.Companion.UnitCandidate>,
-                           childrenFitnessList: MutableList<Utils.Companion.UnitCandidate>): MutableList<UnitDecisionMaker> =
+    override fun selection(candidatesFitnessList: MutableList<UnitCandidate>,
+                           childrenFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker> =
             Selection.selectBestPopulation(candidatesFitnessList, childrenFitnessList)
 
     override fun getTrainingAIs(epoch: Int): List<String> =

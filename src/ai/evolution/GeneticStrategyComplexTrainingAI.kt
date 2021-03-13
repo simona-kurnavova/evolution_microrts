@@ -11,6 +11,8 @@ import ai.evolution.operators.Initialisation
 import ai.evolution.operators.Selection
 import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 import ai.evolution.strategyDecisionMaker.StrategyTrainingUtils
+import ai.evolution.Utils.Companion.UnitCandidate
+import ai.evolution.Utils.Companion.StrategyCandidate
 import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
@@ -22,8 +24,8 @@ open class GeneticStrategyComplexTrainingAI(gameSettings: GameSettings) : Traini
 
     var strategies = mutableListOf<StrategyDecisionMaker>()
     var children = mutableListOf<StrategyDecisionMaker>()
-    var strategyFitnessList = mutableListOf<Utils.Companion.StrategyCandidate>()
-    var childrenStrategyList = mutableListOf<Utils.Companion.StrategyCandidate>()
+    var strategyFitnessList = mutableListOf<StrategyCandidate>()
+    var childrenStrategyList = mutableListOf<StrategyCandidate>()
 
     init {
         println("GeneticStrategyComplexTrainingAI")
@@ -38,16 +40,22 @@ open class GeneticStrategyComplexTrainingAI(gameSettings: GameSettings) : Traini
 
     override fun prepareCandidates(candidates: MutableList<UnitDecisionMaker>, children: Boolean): MutableList<UnitDecisionMaker> {
         // Adds strategy AIs to candidates before running the game
-        candidates.shuffled().chunked(POPULATION / StrategyTrainingUtils.POPULATION).forEachIndexed { index, decisionMakers ->
-            decisionMakers.forEach {
-                it.strategyDecisionMaker = if (children) this.children[index] else strategies[index]
-            }
+        val newCandidates = mutableListOf<UnitDecisionMaker>()
+        repeat(3) {
+            candidates.shuffled().chunked(POPULATION / StrategyTrainingUtils.POPULATION)
+                    .forEachIndexed { index, decisionMakers ->
+                        decisionMakers.forEach {
+                            it.strategyDecisionMaker = if (children) this.children[index]
+                            else strategies[index]
+                            newCandidates.add(it)
+                        }
+                    }
         }
         return candidates
     }
 
-    override fun prepareEvaluatedCandidates(evaluatedCandidates: MutableList<Utils.Companion.UnitCandidate>, children: Boolean): MutableList<Utils.Companion.UnitCandidate> {
-        val fitnessList = mutableListOf<Utils.Companion.StrategyCandidate>()
+    override fun prepareEvaluatedCandidates(evaluatedCandidates: MutableList<UnitCandidate>, children: Boolean): MutableList<UnitCandidate> {
+        val fitnessList = mutableListOf<StrategyCandidate>()
 
         evaluatedCandidates.groupBy { it.unitDecisionMaker.strategyDecisionMaker }.forEach { (_, u) ->
 
@@ -60,22 +68,28 @@ open class GeneticStrategyComplexTrainingAI(gameSettings: GameSettings) : Traini
                 u.forEach { it.unitDecisionMaker.strategyDecisionMaker = null }
             }
         }
+        val finalCandidates = mutableListOf<UnitCandidate>()
+        evaluatedCandidates.groupBy { it.unitDecisionMaker.conditions }.forEach { (_, u) ->
+            u[0].fitness = u.sumByDouble { it.fitness } / u.size
+            u[0].wins = u.sumBy { it.wins } / u.size
+            finalCandidates.add(u[0])
+        }
         if (children) childrenStrategyList = fitnessList else strategyFitnessList = fitnessList
-        return evaluatedCandidates
+        return finalCandidates
     }
 
     override fun calculateFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> =
             Fitness.basicFitness(game, playerStats, player, epoch)
 
-    override fun crossover(candidatesFitnessList: MutableList<Utils.Companion.UnitCandidate>): MutableList<UnitDecisionMaker> {
+    override fun crossover(candidatesFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker> {
         children = Crossover.strategyTournament(strategyFitnessList)
         return Crossover.tournament(candidatesFitnessList)
     }
 
 
-    override fun selection(candidatesFitnessList: MutableList<Utils.Companion.UnitCandidate>,
-                           childrenFitnessList: MutableList<Utils.Companion.UnitCandidate>): MutableList<UnitDecisionMaker> {
-        strategies = Selection.selectBestStrategyPopulation(strategyFitnessList, childrenStrategyList)
+    override fun selection(candidatesFitnessList: MutableList<UnitCandidate>,
+                           childrenFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker> {
+        strategyFitnessList = Selection.selectBestStrategyPopulation(strategyFitnessList, childrenStrategyList)
         return Selection.selectBestPopulation(candidatesFitnessList, childrenFitnessList)
     }
 

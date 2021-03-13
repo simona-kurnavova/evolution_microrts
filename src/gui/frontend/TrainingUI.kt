@@ -24,8 +24,10 @@ class TrainingUI {
                 TrainingUtils.TrainAI.SIMPLE -> GeneticTrainingAI(gameSettings)
                 TrainingUtils.TrainAI.SIMPLE_STRATEGY -> GeneticStrategyTrainingAI(gameSettings)
                 TrainingUtils.TrainAI.COMPLEX_STRATEGY -> GeneticStrategyComplexTrainingAI(gameSettings)
+                else -> null
             }
-            TrainingRunner(ai).train()
+            if (ai == null) RTSEnvironment.train(gameSettings)
+            else TrainingRunner(ai).train()
         }
 
         fun test(gameSettings: GameSettings) =
@@ -33,9 +35,5 @@ class TrainingUI {
 
         fun runGame(gameSettings: GameSettings) =
                 TestingRunner(GeneticTrainingAI(gameSettings)).runAIFromFile()
-
-        fun trainNEAT(gameSettings: GameSettings) {
-            RTSEnvironment.train(gameSettings)
-        }
     }
 }

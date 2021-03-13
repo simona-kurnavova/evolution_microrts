@@ -29,26 +29,21 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     /**
      * Number of resources hold by this unit.
      */
-    protected var unitResources: Int? = null
+    private var unitResources: Int? = null
 
     /**
      * Number of resources hold by this player.
      */
     protected var playerResources: Int? = null
 
-    var canProduce: Boolean? = null // enough resources and able to
     var canHarvest: Boolean? = null // not full and able to
     var canMove: Boolean? = null // is empty slot available and I am able to
 
     fun initialise() {
 
         val entitiesDistances = getEntitiesDistances(gs?.units)
-        val maxDistance = gs?.physicalGameState?.width ?: TrainingUtils.MAP_WIDTH / 4
-
         val enemies = entitiesDistances.filter { isEnemy(it.key) }
         val friends = entitiesDistances.filter { isFriend(it.key) }
-        val entitiesDistancesAround = entitiesDistances.filter { it.value <= maxDistance }
-        //val resources = entitiesDistances.filter { isResource(it.key) }
 
         Utils.directionsWithoutNone.forEach { entityClose.add(getEntity(it, 1)) } // entities around
         val bases = entitiesDistances.filter { isMyBase(it.key) }.values
@@ -56,22 +51,12 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
         baseDistance = if (!bases.isNullOrEmpty()) bases.first().toDouble() / TrainingUtils.MAP_WIDTH * TrainingUtils.MAP_WIDTH else null
 
-        //val directDangerIndex = entityClose.filter { it == Entity.ENEMY }.size.toDouble() / 4.0 // how dangerous entities around
-        //val dangerIndex = entitiesDistancesAround.filter { isEnemy(it.key) }.size.toDouble() / ((2 * maxDistance) + 1) * ((2 * maxDistance) + 1)
-        //val friendsAround = entitiesDistancesAround.filter { isFriend(it.key) }.size.toDouble() / ((2 * maxDistance) + 1) * ((2 * maxDistance) + 1)
-        //val enemyDistance = enemies.values.first().toDouble() / WIDTH*WIDTH
-        //val resourceDistance = resources.values.first().toDouble() / WIDTH*WIDTH
-
-        //val entityAround: MutableList<Entity> = mutableListOf()
-        //entitiesDistancesAround.forEach { entityAround.add(getEntityOnPosition(Pair(it.key.x, it.key.y))) }
-
         if (unit != null && player != null) {
             playerResources = gs?.getPlayer(player)?.resources ?: 0
             unitResources = if (isMyBase(unit)) playerResources else unit.resources
 
             canMove = unit.type.canMove && entityClose.contains(Utils.Companion.Entity.NONE)
             canHarvest = unit.type.canHarvest && entityClose.contains(Utils.Companion.Entity.RESOURCE)
-            canProduce = entityClose.contains(Utils.Companion.Entity.NONE) && canAffordToProduce()
         }
 
         // -------------------------------------------------------------------------------
@@ -84,17 +69,6 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         parameters[Utils.Companion.Keys.ENEMY_BASE_CLOSE] = entityClose.any { it == Utils.Companion.Entity.ENEMY_BASE }
         parameters[Utils.Companion.Keys.FRIEND_CLOSE] = entityClose.any { it == Utils.Companion.Entity.FRIEND }
         parameters[Utils.Companion.Keys.OVERPOWERED] = friendsEnemyRatio < 0
-    }
-
-    private fun canAffordToProduce(): Boolean {
-        if (unit == null || unitResources == null)
-            return false
-
-        unit.type.produces.forEach {
-            if (unitResources!! >= it.cost)
-                return true
-        }
-        return false
     }
 
     fun isEnemy(unit: Unit) = unit.player != player && unit.player != -1
@@ -219,8 +193,9 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
     fun compareTo(partialState: PartialState, abstractAction: AbstractAction,
                   strategy: Strategy? = null): Double {
-
         var result = 0
+
+        //if (partialState.unitType == unit?.type?.name) result++
 
         partialState.parameters.keys.forEach {
             if (parameters[it] == partialState.parameters[it])

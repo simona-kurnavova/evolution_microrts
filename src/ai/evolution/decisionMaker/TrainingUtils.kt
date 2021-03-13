@@ -1,29 +1,28 @@
 package ai.evolution.decisionMaker
 
-import com.google.gson.Gson
-
 object TrainingUtils {
     enum class TrainAI {
-        SIMPLE, SIMPLE_STRATEGY, COMPLEX_STRATEGY
+        SIMPLE, SIMPLE_STRATEGY, COMPLEX_STRATEGY, NEAT
     }
 
-    val AI = TrainAI.COMPLEX_STRATEGY
+    val AI = TrainAI.SIMPLE
+    const val RUNS = 5
 
-    const val POPULATION = 128
-    const val CONDITION_COUNT = 40 // number of conditions for one unit
-    const val EPOCH_COUNT = 400 // number of generations
+    const val POPULATION = 24
+    const val CONDITION_COUNT = 35 // number of conditions for one unit
+    const val EPOCH_COUNT = 6000 // number of generations
 
     const val COND_MUT_PROB = 0.18
     const val PROB_BASE_ATTACK = 0.25
 
     const val CANDIDATE_COUNT = 3 // number of selection candidates for tournament
-    const val CORES_COUNT = 12 // number of processor cores/threads for parallelization
+    const val CORES_COUNT = 8 // number of processor cores/threads for parallelization
     const val TOURNAMENT_START = 50 // number of epoch when to start game tournaments between candidates
     const val ACTIVE_START = 0
     const val PARENT_COUNT = 2 // number of parents child has
 
     const val ALLOW_WORKERS_ONLY = false
-    const val BEST_AI_EPOCH = 100
+    const val BEST_AI_EPOCH = 500
     const val TESTING_RUNS = 8
     const val SLOW_TESTING = false
 
@@ -36,10 +35,7 @@ object TrainingUtils {
     const val MAX_CYCLES = 5000
     const val UPDATE_INTERVAL = 5 // ignored if headless == true
 
-    const val STRATEGY_AI = false
-    const val RUNS = 5
-
-    fun printInfo(): String = Gson().toJson(this)
+    fun printInfo(): String = "${AI.name} pop: $POPULATION, conditions: $CONDITION_COUNT, epochs: $BEST_AI_EPOCH"
 
     fun getPassiveAIS(): List<String> = mutableListOf(
             "ai.PassiveAI",
