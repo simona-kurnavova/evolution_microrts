@@ -1,8 +1,15 @@
 package ai.evolution
 
+import ai.evolution.Utils.Companion.writeEverywhere
 import ai.evolution.decisionMaker.TrainingUtils
+import ai.evolution.decisionMaker.TrainingUtils.BUDGET_INITIAL
+import ai.evolution.decisionMaker.TrainingUtils.TESTING_INTERVAL
+import ai.evolution.decisionMaker.TrainingUtils.TESTING_WHILE_TRAINING
 import ai.evolution.decisionMaker.UnitDecisionMaker
 import ai.evolution.runners.GameRunner
+import ai.evolution.runners.TestingRunner
+import ai.evolution.Utils.Companion.UnitCandidate
+import ai.evolution.decisionMaker.TrainingUtils.BEST_LIST_SIZE
 import com.google.gson.Gson
 import rts.ActionStatistics
 import rts.Game
@@ -10,7 +17,9 @@ import rts.GameSettings
 
 abstract class TrainingAI(val gameSettings: GameSettings) {
 
-    private var bestCandidate: Utils.Companion.UnitCandidate? = null
+    var bestCandidate: UnitCandidate? = null
+
+    var bestCandidateList = mutableListOf<UnitCandidate>()
 
     private val gameRunner = GameRunner(gameSettings) { g: Game, a: ActionStatistics, p: Int ->
         calculateFitness(g, a, p) }
@@ -19,10 +28,10 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
 
     abstract fun calculateFitness(game: Game, playerStats: ActionStatistics, player: Int = 1, epoch: Int? = null): Pair<Double, Boolean>
 
-    abstract fun crossover(candidatesFitnessList: MutableList<Utils.Companion.UnitCandidate>): MutableList<UnitDecisionMaker>
+    abstract fun crossover(candidatesFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker>
 
-    abstract fun selection(candidatesFitnessList: MutableList<Utils.Companion.UnitCandidate>,
-                           childrenFitnessList: MutableList<Utils.Companion.UnitCandidate>): MutableList<UnitDecisionMaker>
+    abstract fun selection(candidatesFitnessList: MutableList<UnitCandidate>,
+                           childrenFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker>
 
     abstract fun getTrainingAIs(epoch: Int): List<String>
 
@@ -31,28 +40,45 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
             AIs.add(GeneticAI(bestDecisionMaker))
         }*/
 
-    fun evaluateFitness(candidates: MutableList<UnitDecisionMaker>, epoch: Int, children: Boolean = false): MutableList<Utils.Companion.UnitCandidate> {
-        val evaluatedCandidates = mutableListOf<Utils.Companion.UnitCandidate>()
+    fun evaluateFitness(candidates: MutableList<UnitDecisionMaker>, epoch: Int, children: Boolean = false, budget: Int = BUDGET_INITIAL): MutableList<Utils.Companion.UnitCandidate> {
+        val evaluatedCandidates = mutableListOf<UnitCandidate>()
         val ais = getTrainingAIs(epoch)
 
         prepareCandidates(candidates, children)
                 .chunked(TrainingUtils.CORES_COUNT)
                 .forEach { list ->
             list.parallelStream().forEach {
-                val fitnessEval = gameRunner.runGameForAIs(gameRunner.getEvaluateLambda(it), ais)
+                val fitnessEval = gameRunner.runGameForAIs(gameRunner.getEvaluateLambda(it),
+                        ais, false, budget, runsPerAi = 1)
                 evaluatedCandidates.add(Utils.Companion.UnitCandidate(it, fitnessEval.first, fitnessEval.second))
             }
         }
         evaluatedCandidates.sortByDescending{ it.fitness; it.wins }
-        //val best = evaluatedCandidates.maxByOrNull { it.fitness; it.wins }
+        val best = evaluatedCandidates[0]
 
-        /*if (bestCandidate == null || bestCandidate!!.fitness <= best!!.fitness && epoch >= TrainingUtils.ACTIVE_START) {
+        with(bestCandidateList) {
+            add(best)
+            sortByDescending { it.wins; it.fitness }
+            if (size > BEST_LIST_SIZE)
+                bestCandidateList.removeAt(bestCandidateList.size - 1)
+        }
+
+        if (bestCandidate == null || bestCandidate!!.fitness <= best.fitness && epoch >= TrainingUtils.ACTIVE_START) {
             bestCandidate = best
-        }*/
+        }
+
+        if (TESTING_WHILE_TRAINING && bestCandidate != null && !children &&
+                epoch > 0 && epoch % TESTING_INTERVAL == 0) {
+            writeEverywhere("\nEPOCH ${epoch}, FITNESS ${bestCandidate?.fitness}, " +
+                    "WINS ${bestCandidate?.wins} ", Utils.evalFile)
+            TestingRunner(this).testAI(bestCandidate!!.unitDecisionMaker)
+            writeEverywhere("\n", Utils.evalFile)
+        }
+
         return prepareEvaluatedCandidates(evaluatedCandidates, children)
     }
 
-    open fun prepareEvaluatedCandidates(evaluatedCandidates: MutableList<Utils.Companion.UnitCandidate>, children: Boolean): MutableList<Utils.Companion.UnitCandidate> = evaluatedCandidates
+    open fun prepareEvaluatedCandidates(evaluatedCandidates: MutableList<UnitCandidate>, children: Boolean): MutableList<UnitCandidate> = evaluatedCandidates
 
     /**
      * Prepare candidates before running game. Do nothing on default.
@@ -62,7 +88,7 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
     /**
      * Saves best candidate to file.
      */
-    fun saveBestIfFound(candidatesFitnessList: MutableList<Utils.Companion.UnitCandidate>): Boolean {
+    fun saveBestIfFound(candidatesFitnessList: MutableList<UnitCandidate>): Boolean {
         val best = bestCandidate ?: candidatesFitnessList[0]
         if (best.wins >= TrainingUtils.getActiveAIS().size) {
             Utils.writeToFile("Found best unit of Fitness: " + "${best.fitness}")
@@ -70,6 +96,11 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
             // Save best unit to file
             Utils.conditionsFile.delete() // delete existing file first
             Utils.writeToFile(Gson().toJson(best.unitDecisionMaker).toString(), Utils.conditionsFile)
+
+            // Also, save best list if available
+            bestCandidateList.forEach {
+                Utils.writeToFile(Gson().toJson(it.unitDecisionMaker).toString(), Utils.bestListFile)
+            }
             return true
         }
         return false

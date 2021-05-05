@@ -1,25 +1,26 @@
 package ai.evolution.decisionMaker
 
 import ai.evolution.Utils
+import ai.evolution.Utils.Companion.Entity
+import ai.evolution.Utils.Companion.Keys
+import ai.evolution.decisionMaker.TrainingUtils.MAP_WIDTH
 import ai.evolution.strategyDecisionMaker.Strategy
-import ai.evolution.strategyDecisionMaker.StrategyCondition
-import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 import rts.GameState
 import rts.PhysicalGameState
 import rts.UnitAction
 import rts.units.Unit
 import rts.units.UnitType
-import rts.units.UnitTypeTable
 import kotlin.math.abs
 
 open class State(val player: Int? = null, val gs: GameState? = null, val unit: Unit? = null) {
+    private val tolerance = MAP_WIDTH / 4
 
-    val parameters = mutableMapOf<Utils.Companion.Keys, Boolean>()
+    val parameters = mutableMapOf<Keys, Boolean>()
 
     /**
      * Distance = 1; 4 directions
      */
-    private val entityClose: MutableList<Utils.Companion.Entity> = mutableListOf()
+    private val entityClose: MutableList<Entity> = mutableListOf()
 
     /**
      * Base distance.
@@ -55,20 +56,55 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
             playerResources = gs?.getPlayer(player)?.resources ?: 0
             unitResources = if (isMyBase(unit)) playerResources else unit.resources
 
-            canMove = unit.type.canMove && entityClose.contains(Utils.Companion.Entity.NONE)
-            canHarvest = unit.type.canHarvest && entityClose.contains(Utils.Companion.Entity.RESOURCE)
+            canMove = unit.type.canMove && entityClose.contains(Entity.NONE)
+            canHarvest = unit.type.canHarvest && entityClose.contains(Entity.RESOURCE)
         }
 
         // -------------------------------------------------------------------------------
 
-        parameters[Utils.Companion.Keys.ENEMY_CLOSE] = entityClose.contains(Utils.Companion.Entity.ENEMY) || entityClose.contains(Utils.Companion.Entity.ENEMY_BASE)
-        parameters[Utils.Companion.Keys.RESOURCE_CLOSE] = entityClose.contains(Utils.Companion.Entity.RESOURCE)
-        parameters[Utils.Companion.Keys.CARRY_RESOURCES] = unitResources != 0
-        parameters[Utils.Companion.Keys.EMPTY_AROUND] = entityClose.filter { it != Utils.Companion.Entity.ENEMY }.size == 4
-        parameters[Utils.Companion.Keys.SURROUNDED] = entityClose.filter { it == Utils.Companion.Entity.ENEMY }.size > 1
-        parameters[Utils.Companion.Keys.ENEMY_BASE_CLOSE] = entityClose.any { it == Utils.Companion.Entity.ENEMY_BASE }
-        parameters[Utils.Companion.Keys.FRIEND_CLOSE] = entityClose.any { it == Utils.Companion.Entity.FRIEND }
-        parameters[Utils.Companion.Keys.OVERPOWERED] = friendsEnemyRatio < 0
+        // Resources
+        parameters[Keys.HAVE_RESOURCES] = playerResources != 0
+        parameters[Keys.CARRY_RESOURCES] = unitResources != 0
+        parameters[Keys.RESOURCE_REACHABLE] = entityClose.contains(Entity.RESOURCE)
+        parameters[Keys.RESOURCE_CLOSE] = entitiesDistances.filter { isResource(it.key) && it.value < tolerance }
+                .isNotEmpty()
+        parameters[Keys.BASE_CLOSE] = entitiesDistances.filter { isMyBase(it.key) && it.value < tolerance }
+                .isNotEmpty()
+        parameters[Keys.BASE_REACHABLE] = entityClose.contains(Entity.MY_BASE)
+
+        // Produce
+        parameters[Keys.EMPTY_AROUND] = entityClose.any { it == Entity.NONE }
+        parameters[Keys.SAFE_AROUND] = entityClose.filter { it != Entity.ENEMY && it != Entity.ENEMY_BASE }.size == 4
+
+        // Walls
+        parameters[Keys.WALL_AROUND] = entityClose.any { it == Entity.WALL }
+        parameters[Keys.IN_CORNER] = entityClose.count { it == Entity.WALL } > 1
+
+        // Attack
+        parameters[Keys.AM_STRONG] = unit != null && unit.hitPoints > 1
+        parameters[Keys.ENEMY_REACHABLE] = entityClose.contains(Entity.ENEMY) || entityClose.contains(Entity.ENEMY_BASE)
+        parameters[Keys.ENEMY_CLOSE] = entitiesDistances.filter { isEnemy(it.key) && it.value < tolerance }
+                .isNotEmpty()
+        parameters[Keys.SURROUNDED] = entityClose.filter { it == Entity.ENEMY }.size > 1
+
+        // Enemy base
+        parameters[Keys.ENEMY_BASE_REACHABLE] = entityClose.any { it == Entity.ENEMY_BASE }
+        parameters[Keys.ENEMY_BASE_CLOSE] = entitiesDistances.filter { isEnemyBase(it.key) && it.value < tolerance }
+                .isNotEmpty()
+
+        // Barracks
+        parameters[Keys.HAVE_BARRACKS] = entitiesDistances.any { isMyBarracks(it.key) }
+        parameters[Keys.ENEMY_HAVE_BARRACKS] = entitiesDistances.any { isEnemyBarracks(it.key) }
+        parameters[Keys.ENEMY_BARRACKS_CLOSE] = entitiesDistances.filter { isEnemyBarracks(it.key) && it.value < tolerance }
+                .isNotEmpty()
+        parameters[Keys.ENEMY_BARRACKS_REACHABLE] = entitiesDistances.filter { isEnemyBarracks(it.key) && it.value <= 1 }
+                .isNotEmpty()
+
+        // My team
+        parameters[Keys.FRIEND_REACHABLE] = entityClose.any { it == Entity.FRIEND }
+        parameters[Keys.FRIEND_CLOSE] = entitiesDistances.filter { isFriend(it.key) && it.value < tolerance }
+                .isNotEmpty()
+        parameters[Keys.OVERPOWERED] = friendsEnemyRatio < 0
     }
 
     fun isEnemy(unit: Unit) = unit.player != player && unit.player != -1
@@ -78,6 +114,12 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     fun isResource(unit: Unit) = unit.player == -1
 
     fun isBase(unit: Unit) = unit.type.name == "Base"
+
+    fun isBarracks(unit: Unit) = unit.type.name == "Barracks"
+
+    fun isEnemyBarracks(unit: Unit) = isBarracks(unit) && isEnemy(unit)
+
+    fun isMyBarracks(unit: Unit) = isBarracks(unit) && isFriend(unit)
 
     fun isMyBase(unit: Unit) = isBase(unit) && !isEnemy(unit)
 
@@ -195,7 +237,8 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
                   strategy: Strategy? = null): Double {
         var result = 0
 
-        //if (partialState.unitType == unit?.type?.name) result++
+        if (unit?.type?.name == null || partialState.unitType == unit.type?.name)
+            result++
 
         partialState.parameters.keys.forEach {
             if (parameters[it] == partialState.parameters[it])

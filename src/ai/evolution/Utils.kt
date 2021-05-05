@@ -1,16 +1,23 @@
 package ai.evolution
 
 import ai.evolution.decisionMaker.TrainingUtils
+import ai.evolution.decisionMaker.TrainingUtils.ACTIVE_START
+import ai.evolution.decisionMaker.TrainingUtils.AI
+import ai.evolution.decisionMaker.TrainingUtils.BUDGET_ADAPT_CONSTANT
 import ai.evolution.decisionMaker.TrainingUtils.BEST_AI_EPOCH
-import ai.evolution.decisionMaker.TrainingUtils.CANDIDATE_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.BUDGET_INITIAL
 import ai.evolution.decisionMaker.TrainingUtils.CONDITION_COUNT
 import ai.evolution.decisionMaker.TrainingUtils.COND_MUT_PROB
+import ai.evolution.decisionMaker.TrainingUtils.BUDGET_EPOCH_STEP
 import ai.evolution.decisionMaker.TrainingUtils.EPOCH_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.LOAD_FROM_FILE
 import ai.evolution.decisionMaker.TrainingUtils.POPULATION
-import ai.evolution.decisionMaker.TrainingUtils.PROB_BASE_ATTACK
 import ai.evolution.decisionMaker.TrainingUtils.MAP_WIDTH
+import ai.evolution.decisionMaker.TrainingUtils.MAX_CYCLES
 import ai.evolution.decisionMaker.TrainingUtils.RUNS
+import ai.evolution.decisionMaker.TrainingUtils.getActiveAIS
 import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.neat.NEAT_Config.HIDDEN_NODES
 import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 import ai.evolution.strategyDecisionMaker.StrategyTrainingUtils
 import rts.GameState
@@ -36,10 +43,12 @@ class Utils {
          * Root folder for this run output files.
          */
         val ROOT_OUTPUT_FOLDER =
-                "output/${TrainingUtils.AI.name}_${POPULATION}_${CONDITION_COUNT}_${COND_MUT_PROB}_${PROB_BASE_ATTACK}" +
-                        "_${CANDIDATE_COUNT}_${BEST_AI_EPOCH}_${EPOCH_COUNT}" +
-                        "_${MAP_WIDTH}x${MAP_WIDTH}" +
-                        "_${StrategyTrainingUtils.CONDITION_COUNT}_RUNS${RUNS}"
+                "output/${AI.name}_${MAX_CYCLES}_${POPULATION}_${CONDITION_COUNT}_${COND_MUT_PROB}" +
+                        "_${ACTIVE_START}_${BEST_AI_EPOCH}_${EPOCH_COUNT}_${MAP_WIDTH}" +
+                        "_${StrategyTrainingUtils.CONDITION_COUNT}_RUNS${RUNS}${getActiveAIS()}" +
+                        "_${BUDGET_INITIAL}_${BUDGET_ADAPT_CONSTANT}_jump${BUDGET_EPOCH_STEP}" +
+                        if (AI == TrainingUtils.TrainAI.NEAT) "_HN_${HIDDEN_NODES}" else "" +
+                        if (LOAD_FROM_FILE) "from_file" else ""
 
         /**
          * Progress of fitness and victories throughout the training.
@@ -49,7 +58,7 @@ class Utils {
         /**
          * Json of best decision maker.
          */
-        val conditionsFile = File("best_decision_maker")
+        val conditionsFile = File("$ROOT_OUTPUT_FOLDER/best_decision_maker")
 
         /**
          * Final evaluation/testing result of best decision maker.
@@ -59,6 +68,10 @@ class Utils {
         val averageBestFile = File("$ROOT_OUTPUT_FOLDER/average_best_fitness")
 
         val actionFile = File("$ROOT_OUTPUT_FOLDER/actions")
+
+        val bestListFile = File("$ROOT_OUTPUT_FOLDER/list_best_decision_makers")
+
+        val popListFile = File("$ROOT_OUTPUT_FOLDER/population_list")
 
         val directions = listOf(
             DIRECTION_NONE, DIRECTION_RIGHT, DIRECTION_LEFT, DIRECTION_UP, DIRECTION_DOWN
@@ -73,15 +86,27 @@ class Utils {
         )
 
         enum class Keys {
-            ENTITY_TYPE,
-            ENEMY_CLOSE, RESOURCE_CLOSE, CARRY_RESOURCES, EMPTY_AROUND,
-            SURROUNDED, ENEMY_BASE_CLOSE, FRIEND_CLOSE,
-            OVERPOWERED
+            HAVE_RESOURCES, CARRY_RESOURCES,
+            RESOURCE_CLOSE, RESOURCE_REACHABLE,
+            BASE_CLOSE, BASE_REACHABLE,
+            EMPTY_AROUND, SAFE_AROUND,
+            AM_STRONG, ENEMY_CLOSE, ENEMY_REACHABLE, SURROUNDED,
+            ENEMY_BASE_REACHABLE, ENEMY_BASE_CLOSE,
+            WALL_AROUND, IN_CORNER, FRIEND_CLOSE, FRIEND_REACHABLE,
+            OVERPOWERED,
+            HAVE_BARRACKS, ENEMY_HAVE_BARRACKS, ENEMY_BARRACKS_CLOSE, ENEMY_BARRACKS_REACHABLE
         }
 
         val keys = listOf(
-            Keys.ENEMY_CLOSE, Keys.RESOURCE_CLOSE, Keys.CARRY_RESOURCES, Keys.EMPTY_AROUND, Keys.SURROUNDED, Keys.FRIEND_CLOSE,
-            Keys.ENEMY_BASE_CLOSE, Keys.OVERPOWERED
+                Keys.HAVE_RESOURCES, Keys.CARRY_RESOURCES,
+                Keys.RESOURCE_CLOSE, Keys.RESOURCE_REACHABLE,
+                Keys.BASE_CLOSE, Keys.BASE_REACHABLE,
+                Keys.EMPTY_AROUND, Keys.SAFE_AROUND,
+                Keys.AM_STRONG, Keys.ENEMY_CLOSE, Keys.ENEMY_REACHABLE, Keys.SURROUNDED,
+                Keys.ENEMY_BASE_REACHABLE, Keys.ENEMY_BASE_CLOSE,
+                Keys.WALL_AROUND, Keys.IN_CORNER, Keys.FRIEND_CLOSE, Keys.FRIEND_REACHABLE,
+                Keys.OVERPOWERED,
+                Keys.HAVE_BARRACKS, Keys.ENEMY_HAVE_BARRACKS, Keys.ENEMY_BARRACKS_CLOSE, Keys.ENEMY_BARRACKS_REACHABLE
         )
 
         enum class Entity {

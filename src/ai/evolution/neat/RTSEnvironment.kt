@@ -1,8 +1,10 @@
 package ai.evolution.neat
 
+import ai.evolution.Utils.Companion.ROOT_OUTPUT_FOLDER
 import ai.evolution.Utils.Companion.writeEverywhere
 import ai.evolution.Utils.Companion.writeToFile
 import ai.evolution.decisionMaker.TrainingUtils
+import ai.evolution.decisionMaker.TrainingUtils.BUDGET_INITIAL
 import ai.evolution.decisionMaker.TrainingUtils.CORES_COUNT
 import ai.evolution.decisionMaker.TrainingUtils.EPOCH_COUNT
 import ai.evolution.decisionMaker.TrainingUtils.RUNS
@@ -11,6 +13,7 @@ import ai.evolution.neat.NEAT_Config.HIDDEN_NODES
 import ai.evolution.neat.NEAT_Config.POPULATION
 import ai.evolution.operators.Fitness
 import ai.evolution.runners.GameRunner
+import com.google.gson.Gson
 import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
@@ -24,20 +27,20 @@ class RTSEnvironment(gameSettings: GameSettings) : Environment {
     override fun evaluateFitness(population: ArrayList<Genome>) {
         population.chunked(CORES_COUNT).forEach { chunk ->
             chunk.parallelStream().forEach {
-                val fitnessEval = gameRunner.runGameForAIs(gameRunner.getEvaluateLambda(it), getActiveAIS())
+                val fitnessEval = gameRunner.runGameForAIs(gameRunner.getEvaluateLambda(it), getActiveAIS(),
+                        print = false, BUDGET_INITIAL, runsPerAi = 1)
                 it.fitness = fitnessEval.first.toFloat()
             }
         }
     }
 
     companion object {
-        private const val neatRoot = "output/NEAT_pop=${POPULATION}_hidden=${HIDDEN_NODES}epochs=$EPOCH_COUNT"
-        private val neatEpochsFile = File("$neatRoot/epochs")
-        private val neatBestFile = File("$neatRoot/best_genome")
-        private val neatAverageBestFile = File("$neatRoot/average_best")
+        //private const val neatRoot = "output/NEAT_pop=${POPULATION}_hidden=${HIDDEN_NODES}epochs=$EPOCH_COUNT"
+        private val neatEpochsFile = File("$ROOT_OUTPUT_FOLDER/epochs")
+        private val neatBestFile = File("$ROOT_OUTPUT_FOLDER/best_genome")
+        private val neatAverageBestFile = File("$ROOT_OUTPUT_FOLDER/average_best")
 
         fun train(gameSettings: GameSettings) {
-            File(neatRoot).mkdirs()
             val fitnessSum = mutableMapOf<Int, Float>()
 
             repeat(RUNS) { _ ->
@@ -45,7 +48,7 @@ class RTSEnvironment(gameSettings: GameSettings) : Environment {
                 val pool = Pool().apply { initializePool() }
                 var topGenome = Genome()
 
-                repeat(TrainingUtils.EPOCH_COUNT) { epoch ->
+                repeat(EPOCH_COUNT) { epoch ->
                     pool.evaluateFitness(rtsEnvironment)
                     topGenome = pool.topGenome
                     writeEverywhere("$epoch BEST: ${topGenome.points}", neatEpochsFile)
@@ -53,7 +56,7 @@ class RTSEnvironment(gameSettings: GameSettings) : Environment {
                     fitnessSum[epoch] = fitnessSum[epoch]!! + topGenome.points
                     pool.breedNewGeneration()
                 }
-                //writeToFile(Gson().toJson(topGenome).toString(), neatBestFile)
+                writeToFile(Gson().toJson(topGenome).toString(), neatBestFile)
             }
             fitnessSum.forEach {
                 writeToFile("${it.key} BEST ${it.value / RUNS}", neatAverageBestFile)

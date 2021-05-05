@@ -1,14 +1,19 @@
 package ai.evolution.runners
 
+import ai.core.AI
+import ai.core.AIWithComputationBudget
 import ai.evolution.*
 import ai.evolution.Utils.Companion.actions
 import ai.evolution.Utils.Companion.entitiesWithoutMe
 import ai.evolution.decisionMaker.AbstractAction
 import ai.evolution.decisionMaker.AbstractAction.Companion.types
 import ai.evolution.decisionMaker.State
-import ai.evolution.decisionMaker.UnitDecisionMaker
 import ai.evolution.decisionMaker.TrainingUtils
+import ai.evolution.decisionMaker.TrainingUtils.BUDGET_INITIAL
+import ai.evolution.decisionMaker.TrainingUtils.TESTING_BUDGET
+import ai.evolution.decisionMaker.TrainingUtils.TESTING_RUNS
 import ai.evolution.decisionMaker.TrainingUtils.UTT_VERSION
+import ai.evolution.decisionMaker.UnitDecisionMaker
 import ai.evolution.neat.Genome
 import ai.evolution.strategyDecisionMaker.GlobalState
 import rts.ActionStatistics
@@ -20,10 +25,20 @@ import rts.units.UnitTypeTable
 class GameRunner(val gameSettings: GameSettings,
                  val fitness: (Game, ActionStatistics, Int) -> Pair<Double, Boolean>) {
 
-    fun runGame(evaluate: (State, GlobalState) -> List<AbstractAction>, enemyAi: String, player: Int): Pair<Double, Boolean>? {
-        val evolutionAI = EvolutionAI(evaluate, UnitTypeTable(gameSettings.uttVersion))
-        val game = Game(UnitTypeTable(UTT_VERSION), TrainingUtils.MAP_LOCATION, TrainingUtils.HEADLESS, TrainingUtils.PARTIALLY_OBSERVABLE, TrainingUtils.MAX_CYCLES,
-                TrainingUtils.UPDATE_INTERVAL, evolutionAI, enemyAi, player == 1)
+    fun runGame(evaluate: (State, GlobalState) -> List<AbstractAction>, enemyAi: String, player: Int, budget: Int = BUDGET_INITIAL): Pair<Double, Boolean>? {
+        val utt = UnitTypeTable(UTT_VERSION)
+
+        val evolutionAI = EvolutionAI(evaluate, utt)
+        val constructor = Class.forName(enemyAi).getConstructor(UnitTypeTable::class.java)
+        val ai = (constructor.newInstance(utt) as AI)
+        if (ai is AIWithComputationBudget) {
+            ai.timeBudget = budget
+        }
+
+        val game = Game(utt, TrainingUtils.MAP_LOCATION, TrainingUtils.HEADLESS,
+                TrainingUtils.PARTIALLY_OBSERVABLE, TrainingUtils.MAX_CYCLES, TrainingUtils.UPDATE_INTERVAL,
+                if (player == 0) evolutionAI else ai,
+                if (player == 1) evolutionAI else ai)
         try {
             return fitness(game, game.start()[player], player)
         } catch (e: Exception) {
@@ -32,7 +47,8 @@ class GameRunner(val gameSettings: GameSettings,
         return null
     }
 
-    fun runGameForAIs(evaluate: (State, GlobalState) -> List<AbstractAction>, ais: List<String>, runsPerAi: Int = 1, print: Boolean = false): Pair<Double, Int> {
+    fun runGameForAIs(evaluate: (State, GlobalState) -> List<AbstractAction>, ais: List<String>, print: Boolean = false,
+                      budget: Int = TESTING_BUDGET, runsPerAi: Int = TESTING_RUNS): Pair<Double, Int> {
         var globalWins = 0
         var globalFitness = 0.0
 
@@ -42,7 +58,7 @@ class GameRunner(val gameSettings: GameSettings,
             var bestFitness = -90000.0
 
             repeat(runsPerAi) {
-                val fitnessEval = runGame(evaluate, ai, listOf(0, 1).random())
+                val fitnessEval = runGame(evaluate, ai, listOf(0, 1).random(), budget)
                 if (fitnessEval != null) {
                     fitness += fitnessEval.first
                     wins += if (fitnessEval.second) 1 else 0
@@ -55,10 +71,10 @@ class GameRunner(val gameSettings: GameSettings,
             globalWins += wins
 
             if (print) {
-                Utils.writeToFile("Against AI: $ai", Utils.evalFile)
-                Utils.writeToFile(" - AVG fitness: ${fitness / TrainingUtils.TESTING_RUNS}", Utils.evalFile)
-                Utils.writeToFile(" - Best fitness: $bestFitness", Utils.evalFile)
-                Utils.writeToFile(" - Wins: $wins / ${TrainingUtils.TESTING_RUNS}", Utils.evalFile)
+                Utils.writeEverywhere("Against AI: $ai", Utils.evalFile)
+                Utils.writeEverywhere(" - AVG fitness: ${fitness / runsPerAi}", Utils.evalFile)
+                Utils.writeEverywhere(" - Best fitness: $bestFitness", Utils.evalFile)
+                Utils.writeEverywhere(" - Wins: $wins / ${runsPerAi}", Utils.evalFile)
             }
         }
         return Pair(globalFitness / (runsPerAi * ais.size), globalWins)

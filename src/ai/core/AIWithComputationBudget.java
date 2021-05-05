@@ -13,7 +13,7 @@ package ai.core;
  *
  */
 public abstract class AIWithComputationBudget extends AI {
-	
+
 	/**
 	 * Number of milisseconds the function {@link #getAction(int, rts.GameState)} 
 	 * is allowed to use. If set to -1, time is not limited.

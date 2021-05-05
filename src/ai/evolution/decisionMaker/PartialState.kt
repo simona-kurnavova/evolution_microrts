@@ -10,9 +10,9 @@ import rts.units.UnitTypeTable
  */
 class PartialState : State() {
 
-    //var unitType: String = getRandomUnit()
+    var unitType: String? = getRandomUnit()
 
-    private fun getRandomUnit(): String =
+    private fun getRandomUnit(): String? = if (coinToss(0.3)) null else
             UnitTypeTable(UTT_VERSION).unitTypes.filter { it.name != "resource" }.random().name
 
     init {
@@ -20,10 +20,9 @@ class PartialState : State() {
     }
 
     fun mutate() {
-        //if (coinToss(0.2))
-        //    unitType = getRandomUnit()
-
-        if (coinToss(0.4) && parameters.keys.size > 1) {
+        if (coinToss(0.2))
+            unitType = getRandomUnit()
+        else if (coinToss(0.4) && parameters.keys.size > 1) {
             // Remove one key
             parameters.remove(parameters.keys.random())
         } else if (coinToss(0.3) && parameters.keys.size >= 1) {

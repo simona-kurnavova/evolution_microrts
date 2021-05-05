@@ -13,6 +13,7 @@ import ai.evaluation.SimpleSqrtEvaluationFunction3;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 import rts.GameState;
 import rts.PlayerAction;
 import rts.units.UnitTypeTable;

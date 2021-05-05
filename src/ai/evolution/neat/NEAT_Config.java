@@ -1,5 +1,6 @@
 package ai.evolution.neat;
 
+import ai.abstraction.Train;
 import ai.evolution.decisionMaker.TrainingUtils;
 
 /**
@@ -7,9 +8,9 @@ import ai.evolution.decisionMaker.TrainingUtils;
  */
 public class NEAT_Config {
 
-    public static final int INPUTS = 8 + 7; // 8 - states, 7 - hot/one unit type
+    public static final int INPUTS = 23 + 7; // 8 - states, 7 - hot/one unit type
     public static final int OUTPUTS = 6 + 2 + 7 + 7 + 2; // 6 - action type, 7 unit to move to/from, 7 unit to harvest
-    public static final int HIDDEN_NODES = 1000000;
+    public static final int HIDDEN_NODES = TrainingUtils.HIDDEN_UNITS;
     public static final int POPULATION = TrainingUtils.POPULATION;
 
     public static final float COMPATIBILITY_THRESHOLD = 1;

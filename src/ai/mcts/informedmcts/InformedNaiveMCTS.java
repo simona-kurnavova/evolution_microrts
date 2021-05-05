@@ -10,6 +10,7 @@ import ai.core.AIWithComputationBudget;
 import ai.core.ParameterSpecification;
 import ai.evaluation.EvaluationFunction;
 import ai.evaluation.SimpleSqrtEvaluationFunction3;
+import ai.evolution.decisionMaker.TrainingUtils;
 import ai.machinelearning.bayes.ActionInterdependenceModel;
 import ai.machinelearning.bayes.BayesianModelByUnitTypeWithDefaultModel;
 import ai.machinelearning.bayes.featuregeneration.FeatureGeneratorSimple;
@@ -70,7 +71,7 @@ public class InformedNaiveMCTS extends AIWithComputationBudget implements Interr
     
     
     public InformedNaiveMCTS(UnitTypeTable a_utt) throws Exception {
-        this(100,-1,100,10,
+        this(TrainingUtils.BUDGET_INITIAL,-1,100,10,
              0.3f,0.0f,0.4f,
              new UnitActionProbabilityDistributionAI(
                     new BayesianModelByUnitTypeWithDefaultModel(new SAXBuilder().build(

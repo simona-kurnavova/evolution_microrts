@@ -1,6 +1,7 @@
 package rts;
 
 //import gui.frontend.FrontEnd;
+import gui.frontend.FrontEnd;
 import gui.frontend.TrainingUI;
 
 import java.net.ServerSocket;
@@ -30,7 +31,7 @@ public class MicroRTS {
 
         GameSettings gameSettings;
         try {
-            gameSettings = GameSettings.loadFromConfig(GameSettings.fetchConfig(configFile))
+                gameSettings = GameSettings.loadFromConfig(GameSettings.fetchConfig(configFile))
                 .overrideFromArgs(args);
         } catch (java.io.FileNotFoundException ex) {
             System.err.println(
@@ -41,7 +42,7 @@ public class MicroRTS {
         System.out.println(gameSettings);
 
         switch (gameSettings.getLaunchMode()) {
-            /*case STANDALONE:
+            case STANDALONE:
             case HUMAN:
                 runStandAloneGame(gameSettings);
                 break;
@@ -53,7 +54,7 @@ public class MicroRTS {
                 break;
             case CLIENT:
                 startClient(gameSettings);
-                break;*/
+                break;
             case TRAIN:
                 TrainingUI.Companion.train(gameSettings);
                 break;

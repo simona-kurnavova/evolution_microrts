@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+
+import ai.evolution.decisionMaker.TrainingUtils;
 import rts.GameState;
 import rts.PlayerAction;
 import rts.PlayerActionGenerator;
@@ -59,7 +61,7 @@ public class IDRTMinimax extends AIWithComputationBudget implements Interruptibl
 
     
     public IDRTMinimax(UnitTypeTable utt) {
-        this(100, new SimpleSqrtEvaluationFunction3());
+        this(TrainingUtils.BUDGET_INITIAL, new SimpleSqrtEvaluationFunction3());
     }
 
     

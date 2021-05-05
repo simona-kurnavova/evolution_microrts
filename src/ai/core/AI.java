@@ -13,6 +13,7 @@ import rts.units.UnitTypeTable;
  * @author santi
  */
 public abstract class AI {
+
     public abstract void reset();
     
     /* 

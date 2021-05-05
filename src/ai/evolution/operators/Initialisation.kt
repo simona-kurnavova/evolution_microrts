@@ -2,8 +2,11 @@ package ai.evolution.operators
 
 import ai.evolution.decisionMaker.UnitDecisionMaker
 import ai.evolution.decisionMaker.TrainingUtils
+import ai.evolution.decisionMaker.TrainingUtils.LOAD_FROM_FILE
+import ai.evolution.decisionMaker.TrainingUtils.LOAD_POPULATION_FILE
 import ai.evolution.strategyDecisionMaker.StrategyTrainingUtils
 import ai.evolution.decisionMaker.TrainingUtils.POPULATION
+import ai.evolution.runners.TestingRunner
 import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 
 object Initialisation {
@@ -12,7 +15,11 @@ object Initialisation {
      */
     fun simpleInit(strategy: Boolean = false): MutableList<UnitDecisionMaker> = mutableListOf<UnitDecisionMaker>().apply {
         repeat(POPULATION) {
-            add(UnitDecisionMaker(TrainingUtils.CONDITION_COUNT).apply {
+            if (LOAD_FROM_FILE) {
+                add(TestingRunner.loadAIFromFile(LOAD_POPULATION_FILE, it))
+            }
+            else
+                add(UnitDecisionMaker(TrainingUtils.CONDITION_COUNT).apply {
                 if (strategy) strategyDecisionMaker = StrategyDecisionMaker(StrategyTrainingUtils.CONDITION_COUNT)
             })
         }
