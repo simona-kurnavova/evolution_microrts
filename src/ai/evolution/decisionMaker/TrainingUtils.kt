@@ -11,16 +11,17 @@ object TrainingUtils {
      * Global settings.
      */
     val AI = TrainAI.NEAT
+    const val TESTING_ONLY_MODE = true
+
     const val RUNS = 1
     const val EPOCH_COUNT = 3000 // number of generations
     const val POPULATION = 100
     const val MAP_WIDTH = 16
-    const val TESTING_ONLY_MODE = false
 
     /**
      * Neat settings only.
      */
-    const val HIDDEN_UNITS = 1000
+    const val HIDDEN_UNITS = 1000000
 
     /**
      * SGA settings only.
@@ -38,9 +39,9 @@ object TrainingUtils {
     const val BUDGET_ADAPT_CONSTANT = 0
     const val BUDGET_EPOCH_STEP = 200
 
-    val TEST_FILE = File("output/" +
-            "20_SIMPLE_20_30_0.14_0.25_1650_2500_16x16_25_RUNS1[ai.minimax.RTMiniMax.IDRTMinimax, ai.minimax.RTMiniMax.IDRTMinimax]_40_10_jump200" +
-            "/population_list")
+    val TEST_FILE = File("output/Tests/NEAT/1. Neat - Population size/" +
+            "NEAT_5000_200_30_0.14_0_1500_3000_16_25_RUNS1[ai.RandomBiasedAI, ai.RandomBiasedAI]_10_0_jump200" +
+            "/best_genome")
     const val TESTING_RUNS = 100
     const val TESTING_BUDGET = 100
 
@@ -101,10 +102,10 @@ object TrainingUtils {
 
     fun getTestingAIs(): MutableList<String> = mutableListOf(
             "ai.RandomAI",
-            "ai.RandomBiasedAI",
-            "ai.mcts.informedmcts.InformedNaiveMCTS",
-            "ai.mcts.naivemcts.NaiveMCTS",
-            "ai.minimax.RTMiniMax.IDRTMinimax",
+            //"ai.RandomBiasedAI",
+            //"ai.mcts.informedmcts.InformedNaiveMCTS",
+            //"ai.mcts.naivemcts.NaiveMCTS",
+            //"ai.minimax.RTMiniMax.IDRTMinimax",
             //"ai.stochastic.UnitActionProbabilityDistributionAI",
             //"ai.portfolio.portfoliogreedysearch.UnitScriptsAI", = no such method (constructor) ???
             //"ai.minimax.RTMiniMax.RTMinimax",

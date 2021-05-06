@@ -16,7 +16,7 @@ object Initialisation {
     fun simpleInit(strategy: Boolean = false): MutableList<UnitDecisionMaker> = mutableListOf<UnitDecisionMaker>().apply {
         repeat(POPULATION) {
             if (LOAD_FROM_FILE) {
-                add(TestingRunner.loadAIFromFile(LOAD_POPULATION_FILE, it))
+                add(TestingRunner.loadDecisionMakerFromFile(LOAD_POPULATION_FILE, it))
             }
             else
                 add(UnitDecisionMaker(TrainingUtils.CONDITION_COUNT).apply {

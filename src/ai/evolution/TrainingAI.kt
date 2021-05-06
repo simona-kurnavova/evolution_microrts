@@ -48,7 +48,7 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
                 .chunked(TrainingUtils.CORES_COUNT)
                 .forEach { list ->
             list.parallelStream().forEach {
-                val fitnessEval = gameRunner.runGameForAIs(gameRunner.getEvaluateLambda(it),
+                val fitnessEval = gameRunner.runGameForAIs(GameRunner.getEvaluateLambda(it),
                         ais, false, budget, runsPerAi = 1)
                 evaluatedCandidates.add(Utils.Companion.UnitCandidate(it, fitnessEval.first, fitnessEval.second))
             }
@@ -71,7 +71,8 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
                 epoch > 0 && epoch % TESTING_INTERVAL == 0) {
             writeEverywhere("\nEPOCH ${epoch}, FITNESS ${bestCandidate?.fitness}, " +
                     "WINS ${bestCandidate?.wins} ", Utils.evalFile)
-            TestingRunner(this).testAI(bestCandidate!!.unitDecisionMaker)
+            TestingRunner(gameSettings) { g: Game, a: ActionStatistics, p: Int ->
+                calculateFitness(g, a, p) }.testAI(GameRunner.getEvaluateLambda(bestCandidate!!.unitDecisionMaker))
             writeEverywhere("\n", Utils.evalFile)
         }
 

@@ -27,7 +27,7 @@ class RTSEnvironment(gameSettings: GameSettings) : Environment {
     override fun evaluateFitness(population: ArrayList<Genome>) {
         population.chunked(CORES_COUNT).forEach { chunk ->
             chunk.parallelStream().forEach {
-                val fitnessEval = gameRunner.runGameForAIs(gameRunner.getEvaluateLambda(it), getActiveAIS(),
+                val fitnessEval = gameRunner.runGameForAIs(GameRunner.getEvaluateLambda(it), getActiveAIS(),
                         print = false, BUDGET_INITIAL, runsPerAi = 1)
                 it.fitness = fitnessEval.first.toFloat()
             }
@@ -58,6 +58,7 @@ class RTSEnvironment(gameSettings: GameSettings) : Environment {
                 }
                 writeToFile(Gson().toJson(topGenome).toString(), neatBestFile)
             }
+
             fitnessSum.forEach {
                 writeToFile("${it.key} BEST ${it.value / RUNS}", neatAverageBestFile)
             }
