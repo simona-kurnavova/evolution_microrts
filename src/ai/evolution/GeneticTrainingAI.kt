@@ -23,7 +23,7 @@ open class GeneticTrainingAI(gameSettings: GameSettings) : TrainingAI(gameSettin
             Initialisation.simpleInit()
 
     override fun calculateFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> =
-            Fitness.basicFitness(game, playerStats, player, epoch)
+            Fitness.aggressiveFitness(game, playerStats, player, epoch)
 
     override fun crossover(candidatesFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker> =
             Crossover.tournament(candidatesFitnessList)

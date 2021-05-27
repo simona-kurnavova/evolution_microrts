@@ -55,7 +55,7 @@ class TrainingUI {
         }
 
         private fun getNeatTestingRunner(gameSettings: GameSettings) =  TestingRunner(gameSettings) {
-            g: Game, a: ActionStatistics, p: Int -> Fitness.basicFitness(g, a, p, null)
+            g: Game, a: ActionStatistics, p: Int -> TrainingUtils.getFitness(g, a, p, null)
         }
     }
 }

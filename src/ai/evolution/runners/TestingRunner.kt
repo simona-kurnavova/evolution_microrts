@@ -51,7 +51,7 @@ class TestingRunner(gameSettings: GameSettings,
     }
 
     private fun fastTestAI(decider: (State, GlobalState) -> List<AbstractAction>): Int =
-            gameRunner.runGameForAIs(decider, getFastTestingAIs(), true, budget = 10, runsPerAi = 10).second
+            gameRunner.runGameForAIs(decider, getFastTestingAIs(), true, budget = 100, runsPerAi = 10).second
 
     fun testAI(decider: (State, GlobalState) -> List<AbstractAction>) {
         val ais = TrainingUtils.getTestingAIs()

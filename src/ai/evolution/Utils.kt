@@ -10,6 +10,7 @@ import ai.evolution.decisionMaker.TrainingUtils.CONDITION_COUNT
 import ai.evolution.decisionMaker.TrainingUtils.COND_MUT_PROB
 import ai.evolution.decisionMaker.TrainingUtils.BUDGET_EPOCH_STEP
 import ai.evolution.decisionMaker.TrainingUtils.EPOCH_COUNT
+import ai.evolution.decisionMaker.TrainingUtils.FITNESS
 import ai.evolution.decisionMaker.TrainingUtils.LOAD_FROM_FILE
 import ai.evolution.decisionMaker.TrainingUtils.POPULATION
 import ai.evolution.decisionMaker.TrainingUtils.MAP_WIDTH
@@ -43,12 +44,12 @@ class Utils {
          * Root folder for this run output files.
          */
         val ROOT_OUTPUT_FOLDER =
-                "output/${AI.name}_${MAX_CYCLES}_${POPULATION}_${CONDITION_COUNT}_${COND_MUT_PROB}" +
-                        "_${ACTIVE_START}_${BEST_AI_EPOCH}_${EPOCH_COUNT}_${MAP_WIDTH}" +
-                        "_${StrategyTrainingUtils.CONDITION_COUNT}_RUNS${RUNS}${getActiveAIS()}" +
-                        "_${BUDGET_INITIAL}_${BUDGET_ADAPT_CONSTANT}_jump${BUDGET_EPOCH_STEP}" +
-                        if (AI == TrainingUtils.TrainAI.NEAT) "_HN_${HIDDEN_NODES}" else "" +
-                        if (LOAD_FROM_FILE) "from_file" else ""
+                "output/${AI.name}_${POPULATION}_map=${MAP_WIDTH}_runs=${RUNS}${getActiveAIS()}_b=${BUDGET_INITIAL}" +
+                        if (BUDGET_ADAPT_CONSTANT != 0) "_${BUDGET_ADAPT_CONSTANT}_step=${BUDGET_EPOCH_STEP}" else "" +
+                        if (AI == TrainingUtils.TrainAI.NEAT)"_hn=${HIDDEN_NODES}_e=${EPOCH_COUNT}"
+                        else "_cond=${CONDITION_COUNT}_mut=${COND_MUT_PROB}_as=${ACTIVE_START}_em=${BEST_AI_EPOCH}_e=${EPOCH_COUNT}" +
+                        if (AI == TrainingUtils.TrainAI.SIMPLE_STRATEGY) "_${StrategyTrainingUtils.CONDITION_COUNT}" else "" +
+                        if (LOAD_FROM_FILE) "from_file" else "" + "_fit=${FITNESS.name}"
 
         /**
          * Progress of fitness and victories throughout the training.

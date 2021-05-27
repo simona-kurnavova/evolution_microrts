@@ -66,6 +66,7 @@ class TrainingRunner(val ai: TrainingAI) {
     }
 
     private fun adaptBudget(epoch: Int) {
+        if (BUDGET_EPOCH_STEP <= 0) return
         if (ACTIVE_START > 0 && ACTIVE_START == epoch) {
             budget = BUDGET_INITIAL
             ai.bestCandidate = null

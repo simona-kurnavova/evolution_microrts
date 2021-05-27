@@ -13,6 +13,7 @@ import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 import ai.evolution.strategyDecisionMaker.StrategyTrainingUtils
 import ai.evolution.Utils.Companion.UnitCandidate
 import ai.evolution.Utils.Companion.StrategyCandidate
+import ai.evolution.decisionMaker.TrainingUtils
 import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
@@ -79,7 +80,7 @@ open class GeneticStrategyComplexTrainingAI(gameSettings: GameSettings) : Traini
     }
 
     override fun calculateFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> =
-            Fitness.basicFitness(game, playerStats, player, epoch)
+            TrainingUtils.getFitness(game, playerStats, player, epoch)
 
     override fun crossover(candidatesFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker> {
         children = Crossover.strategyTournament(strategyFitnessList)
