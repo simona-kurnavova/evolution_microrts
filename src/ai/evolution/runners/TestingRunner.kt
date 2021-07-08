@@ -1,13 +1,13 @@
 package ai.evolution.runners
 
 import ai.evolution.utils.Utils.Companion.conditionsFile
-import ai.evolution.decisionMaker.AbstractAction
-import ai.evolution.decisionMaker.State
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.state.AbstractAction
+import ai.evolution.state.State
+import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.TrainingUtils.AI
 import ai.evolution.neat.Genome
-import ai.evolution.strategyDecisionMaker.GlobalState
+import ai.evolution.gpstrategy.GlobalState
 import ai.evolution.utils.TestingUtils
 import ai.evolution.utils.TestingUtils.TESTING_POP_BUDGET
 import ai.evolution.utils.TestingUtils.TESTING_POP_RUNS

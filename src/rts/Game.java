@@ -1,9 +1,6 @@
 package rts;
 
 import ai.core.AI;
-import ai.evolution.decisionMaker.State;
-import ai.evolution.utils.Utils;
-import com.google.gson.Gson;
 import gui.PhysicalGameStatePanel;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;

@@ -5,18 +5,18 @@ import ai.core.AIWithComputationBudget
 import ai.evolution.*
 import ai.evolution.utils.Utils.Companion.actions
 import ai.evolution.utils.Utils.Companion.entities
-import ai.evolution.decisionMaker.AbstractAction
-import ai.evolution.decisionMaker.AbstractAction.Companion.types
-import ai.evolution.decisionMaker.State
+import ai.evolution.state.AbstractAction
+import ai.evolution.state.AbstractAction.Companion.types
+import ai.evolution.state.State
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.TrainingUtils.BUDGET_INITIAL
 import ai.evolution.utils.TrainingUtils.MODE
 import ai.evolution.utils.TestingUtils.TESTING_BUDGET
 import ai.evolution.utils.TestingUtils.TESTING_RUNS
 import ai.evolution.utils.TrainingUtils.UTT_VERSION
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.neat.Genome
-import ai.evolution.strategyDecisionMaker.GlobalState
+import ai.evolution.gpstrategy.GlobalState
 import ai.evolution.utils.Utils
 import rts.ActionStatistics
 import rts.Game
@@ -132,7 +132,7 @@ class GameRunner(val gameSettings: GameSettings,
         }
 
         fun getEvaluateLambda(neat: Genome) = { s: State, _: GlobalState ->
-            decodeAction(neat.evaluateNetwork(s.getInputs().toFloatArray()).toList())
+            decodeAction(neat.evaluateNetwork(s.getNeatInputs().toFloatArray()).toList())
         }
 
 

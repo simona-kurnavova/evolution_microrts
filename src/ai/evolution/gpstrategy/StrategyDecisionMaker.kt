@@ -1,6 +1,6 @@
-package ai.evolution.strategyDecisionMaker
+package ai.evolution.gpstrategy
 
-import ai.evolution.DecisionMaker
+import ai.evolution.gp.DecisionMaker
 import ai.evolution.utils.Utils.Companion.coinToss
 import ai.evolution.utils.StrategyTrainingUtils.COND_MUT_PROB
 import com.google.gson.Gson

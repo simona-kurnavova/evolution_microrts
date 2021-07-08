@@ -7,18 +7,14 @@ import rts.Game
 import rts.PhysicalGameState
 import kotlin.math.abs
 
+/**
+ * Object for different fitness functions
+ */
 object Fitness {
 
-    fun timeIndependentFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
-        var points = playerStats.damageDone.toDouble() + playerStats.produced - playerStats.enemyDamage +
-                getHp(game, player) + (getBaseHp(game, player) * 10)
-        if (epoch == null || epoch >= TrainingUtils.ACTIVE_START)
-            if (game.gs.winner() == player) {
-                points += 300
-            }
-        return Pair(points, game.gs.winner() == player)
-    }
-
+    /**
+     * Basic fitness implementation with hitpoints, damage and production values. Takes time and victory into account.
+     */
     fun basicFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
         var points = playerStats.damageDone.toDouble() + playerStats.produced - playerStats.enemyDamage +
                     getHp(game, player) + (getBaseHp(game, player) * 10)
@@ -31,6 +27,9 @@ object Fitness {
         return Pair(points, game.gs.winner() == player)
     }
 
+    /**
+     * Focuses only on attack and hitpoints.
+     */
     fun aggressiveFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
         var points = playerStats.damageDone.toDouble() + (getBaseHp(game, player) * 10)
 
@@ -42,6 +41,9 @@ object Fitness {
         return Pair(points, game.gs.winner() == player)
     }
 
+    /**
+     * Focuses on production.
+     */
     fun productiveFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
         var points = playerStats.resHarvested + playerStats.produced + (getBaseHp(game, player) * 10)
 
@@ -50,6 +52,19 @@ object Fitness {
                 points += 300000 / game.gs.time
             }
 
+        return Pair(points, game.gs.winner() == player)
+    }
+
+    /**
+     * Fitness does not take time of the game into account.
+     */
+    fun timeIndependentFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
+        var points = playerStats.damageDone.toDouble() + playerStats.produced - playerStats.enemyDamage +
+                getHp(game, player) + (getBaseHp(game, player) * 10)
+        if (epoch == null || epoch >= TrainingUtils.ACTIVE_START)
+            if (game.gs.winner() == player) {
+                points += 300
+            }
         return Pair(points, game.gs.winner() == player)
     }
 

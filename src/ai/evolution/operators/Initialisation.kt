@@ -1,14 +1,17 @@
 package ai.evolution.operators
 
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.TrainingUtils.LOAD_FROM_FILE
 import ai.evolution.utils.TrainingUtils.LOAD_POPULATION_FILE
 import ai.evolution.utils.StrategyTrainingUtils
 import ai.evolution.utils.TrainingUtils.POPULATION
 import ai.evolution.runners.TestingRunner
-import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
+import ai.evolution.gpstrategy.StrategyDecisionMaker
 
+/**
+ * Initialisation of population.
+ */
 object Initialisation {
     /**
      * Initialise random population of [POPULATION] size with [CONDITION_COUNT] number of conditions for each unit.

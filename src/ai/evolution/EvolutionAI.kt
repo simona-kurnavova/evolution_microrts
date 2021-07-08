@@ -2,9 +2,9 @@ package ai.evolution
 
 import ai.core.AI
 import ai.core.ParameterSpecification
-import ai.evolution.decisionMaker.AbstractAction
-import ai.evolution.decisionMaker.State
-import ai.evolution.strategyDecisionMaker.GlobalState
+import ai.evolution.state.AbstractAction
+import ai.evolution.state.State
+import ai.evolution.gpstrategy.GlobalState
 import rts.GameState
 import rts.PlayerAction
 import rts.units.UnitTypeTable

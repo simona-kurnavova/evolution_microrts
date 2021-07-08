@@ -5,7 +5,7 @@ import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.TrainingUtils.BUDGET_INITIAL
 import ai.evolution.utils.TrainingUtils.TESTING_INTERVAL
 import ai.evolution.utils.TrainingUtils.TESTING_WHILE_TRAINING
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.runners.GameRunner
 import ai.evolution.runners.TestingRunner
 import ai.evolution.utils.Utils.Companion.UnitCandidate
@@ -36,11 +36,6 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
                            childrenFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker>
 
     abstract fun getTrainingAIs(epoch: Int): List<String>
-
-    /*val bestDecisionMaker = bestCandidate?.decisionMaker
-        if (bestDecisionMaker != null && epoch >= TOURNAMENT_START) {
-            AIs.add(GeneticAI(bestDecisionMaker))
-        }*/
 
     fun evaluateFitness(candidates: MutableList<UnitDecisionMaker>, epoch: Int, children: Boolean = false, budget: Int = BUDGET_INITIAL): MutableList<Utils.Companion.UnitCandidate> {
         val evaluatedCandidates = mutableListOf<UnitCandidate>()

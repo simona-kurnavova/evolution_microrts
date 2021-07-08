@@ -1,13 +1,12 @@
 package gui.frontend
 
-import ai.evolution.GeneticStrategyComplexTrainingAI
 import ai.evolution.GeneticStrategyTrainingAI
 import ai.evolution.GeneticTrainingAI
 import ai.evolution.TrainingAI
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.TrainingUtils.MODE
 import ai.evolution.utils.TestingUtils.TEST_FILE
-import ai.evolution.neat.NeatRunner
+import ai.evolution.runners.NeatRunner
 import ai.evolution.runners.TestingRunner
 import ai.evolution.runners.TrainingRunner
 import rts.ActionStatistics
@@ -25,6 +24,7 @@ class TrainingUI {
 
         fun train(gameSettings: GameSettings) {
             println("AI: ${TrainingUtils.AI}, MODE: $MODE")
+
             if (MODE == TrainingUtils.Mode.TESTING)
                 println("File: ${TEST_FILE}")
 
@@ -42,7 +42,6 @@ class TrainingUI {
             val ai = when(TrainingUtils.AI) {
                 TrainingUtils.TrainAI.GP -> GeneticTrainingAI(gameSettings)
                 TrainingUtils.TrainAI.GP_STRATEGY -> GeneticStrategyTrainingAI(gameSettings)
-                TrainingUtils.TrainAI.COMPLEX_STRATEGY -> GeneticStrategyComplexTrainingAI(gameSettings)
                 else -> null
             }
             if (ai != null) {

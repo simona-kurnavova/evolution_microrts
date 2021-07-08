@@ -1,9 +1,9 @@
-package ai.evolution.strategyDecisionMaker
+package ai.evolution.gpstrategy
 
 import ai.evolution.utils.TrainingUtils.UTT_VERSION
 import ai.evolution.utils.Utils.Companion.actions
 import ai.evolution.utils.Utils.Companion.coinToss
-import ai.evolution.decisionMaker.AbstractAction
+import ai.evolution.state.AbstractAction
 import rts.UnitAction.TYPE_PRODUCE
 import rts.units.UnitTypeTable
 

@@ -1,4 +1,4 @@
-package ai.evolution.decisionMaker
+package ai.evolution.state
 
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.Utils
@@ -6,6 +6,9 @@ import rts.UnitAction
 import rts.units.Unit
 import rts.units.UnitTypeTable
 
+/**
+ * Top-level action definition.
+ */
 class AbstractAction {
 
     var action: Int = Utils.actions.random()

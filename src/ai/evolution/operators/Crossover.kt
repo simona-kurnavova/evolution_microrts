@@ -1,9 +1,9 @@
 package ai.evolution.operators
 
 import ai.evolution.utils.Utils
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.utils.TrainingUtils.POPULATION
-import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
+import ai.evolution.gpstrategy.StrategyDecisionMaker
 
 /**
  * Object for crossover implementations.
@@ -32,7 +32,6 @@ object Crossover {
         return children
     }
 
-
     fun strategyTournament(candidatesFitnessList: MutableList<Utils.Companion.StrategyCandidate>): MutableList<StrategyDecisionMaker> {
         val children = mutableListOf<StrategyDecisionMaker>()
         repeat(POPULATION) {
@@ -41,7 +40,7 @@ object Crossover {
                     .chunked(2)
             val parents = mutableListOf<Utils.Companion.StrategyCandidate>()
             parentCandidates.forEach { parents.add(it.maxByOrNull { it.fitness }!!) }
-            // Add child and MUTATE it
+            // Add child and mutate it
             children.add(parents[0].strategyDecisionMaker.crossover(parents[1].strategyDecisionMaker).apply { mutate() })
         }
         return children

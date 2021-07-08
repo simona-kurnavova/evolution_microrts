@@ -1,8 +1,8 @@
 package ai.evolution.utils
 
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.neat.NEAT_Config.*
-import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
+import ai.evolution.gpstrategy.StrategyDecisionMaker
 import rts.UnitAction
 import rts.units.Unit
 import java.io.File

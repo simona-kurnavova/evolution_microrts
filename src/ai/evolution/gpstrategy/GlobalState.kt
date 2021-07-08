@@ -1,4 +1,4 @@
-package ai.evolution.strategyDecisionMaker
+package ai.evolution.gpstrategy
 
 import ai.evolution.utils.TrainingUtils.UTT_VERSION
 import rts.GameState

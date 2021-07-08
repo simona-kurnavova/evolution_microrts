@@ -1,4 +1,4 @@
-package ai.evolution.decisionMaker
+package ai.evolution.state
 
 import ai.evolution.utils.Utils.Companion.coinToss
 import ai.evolution.utils.Utils.Companion.keys
@@ -6,7 +6,7 @@ import ai.evolution.utils.TrainingUtils.UTT_VERSION
 import rts.units.UnitTypeTable
 
 /**
- * State used in condition for comparison with real state of game.
+ * State used in condition for comparison with real state of game (it is a subset of [State]).
  */
 class PartialState : State() {
 
@@ -15,10 +15,20 @@ class PartialState : State() {
     private fun getRandomUnit(): String? = if (coinToss(0.3)) null else
             UnitTypeTable(UTT_VERSION).unitTypes.filter { it.name != "resource" }.random().name
 
+    /**
+     * Initialises randomly, only one value to start small.
+     */
     init {
         parameters[keys.random()] = listOf(true, false).random()
     }
 
+    /**
+     * Mutates partialState. In either way:
+     * - Adds random key
+     * - Removes random key
+     * - Flips value of random key
+     * - Changes unit randomly
+     */
     fun mutate() {
         if (coinToss(0.2))
             unitType = getRandomUnit()
@@ -38,9 +48,5 @@ class PartialState : State() {
                 }
             }
         }
-    }
-
-    companion object {
-        const val TOLERANCE = 0.1
     }
 }

@@ -1,27 +1,40 @@
-package ai.evolution.decisionMaker
+package ai.evolution.gp
 
-import ai.evolution.DecisionMaker
-import ai.evolution.utils.TrainingUtils.COND_MUT_PROB
-import ai.evolution.utils.Utils.Companion.coinToss
-import ai.evolution.strategyDecisionMaker.GlobalState
-import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
+import ai.evolution.state.Condition
+import ai.evolution.state.State
+import ai.evolution.gpstrategy.GlobalState
+import ai.evolution.gpstrategy.StrategyDecisionMaker
+import ai.evolution.utils.TrainingUtils
+import ai.evolution.utils.Utils
 import com.google.gson.Gson
 
+/**
+ * Decision maker for unit. Contain list of conditions based on which decides the best action for unit to take.
+ */
 class UnitDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
 
     val conditions = mutableListOf<Condition>()
 
     var strategyDecisionMaker: StrategyDecisionMaker? = null
 
+    /**
+     * Random init of the given number of conditions at the beginning of the trainning.
+     */
     init {
         repeat(conditionCount) { conditions.add(Condition()) }
     }
 
+    /**
+     * Mutates list of conditions. Each condition has [COND_MUT_PROB] that it is going to be mutated.
+     */
     override fun mutate() {
-        conditions.forEach { if (coinToss(COND_MUT_PROB)) it.mutate() }
+        conditions.forEach { if (Utils.coinToss(TrainingUtils.COND_MUT_PROB)) it.mutate() }
         strategyDecisionMaker?.mutate()
     }
 
+    /**
+     * Creates new child from this and [decisionMaker].
+     */
     fun crossover(decisionMaker: UnitDecisionMaker): UnitDecisionMaker {
         val child = UnitDecisionMaker()
 
@@ -30,15 +43,21 @@ class UnitDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
         }
 
         // For strategy AI only, nulls otherwise
-        child.strategyDecisionMaker =
-                strategyDecisionMaker?.crossover(decisionMaker.strategyDecisionMaker!!)
+        child.strategyDecisionMaker = strategyDecisionMaker?.crossover(decisionMaker.strategyDecisionMaker!!)
         return child
     }
 
+    /**
+     * Returns list of actions with assigned priorities. Sorted in descending order.
+     */
     fun decide(realState: State): List<Pair<Condition, Double>> = conditions.map {
         it to realState.compareTo(it.partialState, it.abstractAction)
     }.toList().shuffled().sortedByDescending { (_, value) -> value }
 
+    /**
+     * Returns list of actions with assigned priorities. Sorted in descending order.
+     * Used for Strategy GP.
+     */
     fun decide(realState: State, globalState: GlobalState): List<Pair<Condition, Double>> =
         conditions.map {
             it to realState.compareTo(it.partialState, it.abstractAction,
@@ -46,7 +65,7 @@ class UnitDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
         }.toList().shuffled().sortedByDescending { (_, value) -> value }
 
     /**
-     * Used when adding a condiition from parent during crossover - creates deep copy.
+     * Used when adding a condition from parent during crossover - creates deep copy.
      */
     private fun addCondition(cond: Condition) {
         val gson = Gson()

@@ -3,9 +3,11 @@ package ai.evolution.operators
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.Utils.Companion.StrategyCandidate
 import ai.evolution.utils.Utils.Companion.UnitCandidate
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.gp.UnitDecisionMaker
 
-
+/**
+ * Implementation of selection.
+ */
 object Selection {
     fun selectBestPopulation(candidatesFitnessList: MutableList<UnitCandidate>,
                              childrenFitnessList: MutableList<UnitCandidate>): MutableList<UnitDecisionMaker> =

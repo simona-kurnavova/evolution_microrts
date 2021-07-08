@@ -1,6 +1,6 @@
 package ai.evolution
 
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.utils.TrainingUtils.ACTIVE_START
 import ai.evolution.utils.TrainingUtils.getActiveAIS
 import ai.evolution.utils.TrainingUtils.getPassiveAIS

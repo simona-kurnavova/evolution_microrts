@@ -13,8 +13,6 @@ object TestingUtils {
     val TEST_FILE = File("build/libs/output/" +
             //"output/Tests/SGA/9. SGA - Auto adaptive budget 5/"+
             "NEAT_100_map=16_[ai.minimax.RTMiniMax.IDRTMinimax, ai.minimax.RTMiniMax.IDRTMinimax]_fit=BASIC_b=5_step=5_per=0e_hn=10000_e=30000_mut0.7_0.03_0.1_0.05_0.2_0.2"+
-            //"SIMPLE_10_map=16_[InformedNaiveMCTS, InformedNaiveMCTS]_fit=BASIC_b=5_step=5_per=0e_cond=10_mut=0.14_as=0_em=800_e=25000"+
-            //"NEAT_100_map=16_[ai.RandomBiasedAI, ai.RandomBiasedAI]_fit=BASIC_b=5_step=5_per=0e_hn=1000_e=20000_ss_15.0_sp_50"+
             //"/best_decision_maker")
             //"/tmp_best_genome")
             "/population_list")

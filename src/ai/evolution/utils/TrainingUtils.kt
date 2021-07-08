@@ -7,7 +7,7 @@ import java.io.File
 
 object TrainingUtils {
     enum class TrainAI {
-        GP, GP_STRATEGY, COMPLEX_STRATEGY, NEAT
+        GP, GP_STRATEGY, NEAT
     }
 
     enum class FitnessType {
@@ -42,14 +42,14 @@ object TrainingUtils {
     /**
      * Neat settings only.
      */
-    const val HIDDEN_UNITS = 1000000 // Number of hidden units of networks
+    const val HIDDEN_UNITS = 10000 // Number of hidden units of networks
 
     /**
      * Adaptive budget settings.
      */
     const val ADAPTIVE_BUDGET = false
     const val TRESHOLD_FITNESS = 700 // Adapt when this fitness value is reached
-    const val BUDGET_INITIAL = 5
+    const val BUDGET_INITIAL = 10
     const val BUDGET_ADAPT_CONSTANT = 5 // Adapt fitness by adding this number
     const val BUDGET_EPOCH_STEP = 0 // Adapt fitness after this number of epochs
     const val BUDGET_UPPER_LIMIT = 100 // Stop when this fitness is reached and trained

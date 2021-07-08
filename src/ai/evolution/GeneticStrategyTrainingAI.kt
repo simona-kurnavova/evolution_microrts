@@ -1,6 +1,6 @@
 package ai.evolution
 
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.operators.Initialisation
 import rts.GameSettings
 

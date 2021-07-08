@@ -1,25 +1,31 @@
-package ai.evolution.decisionMaker
+package ai.evolution.state
 
 import ai.evolution.utils.Utils
 import ai.evolution.utils.Utils.Companion.Entity
 import ai.evolution.utils.Utils.Companion.Keys
 import ai.evolution.utils.TrainingUtils.MAP_WIDTH
-import ai.evolution.strategyDecisionMaker.Strategy
+import ai.evolution.gpstrategy.Strategy
 import ai.evolution.utils.TrainingUtils
-import ai.evolution.utils.Utils.Companion.writeToFile
-import com.google.gson.Gson
-import com.google.gson.annotations.Expose
 import rts.GameState
 import rts.PhysicalGameState
 import rts.UnitAction
 import rts.units.Unit
 import rts.units.UnitType
-import java.io.File
 import kotlin.math.abs
 
+/**
+ * State of the game. Represents the input to all the models.
+ * Gathers data from [GameState] and convert them to simple bool values in [parameters].
+ */
 open class State(val player: Int? = null, val gs: GameState? = null, val unit: Unit? = null) {
+    /**
+     * Defines distance to "close objects".
+     */
     private val tolerance = MAP_WIDTH / 4
 
+    /**
+     * Parameters representing state.
+     */
     val parameters = mutableMapOf<Keys, Boolean>()
 
     /**
@@ -44,7 +50,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
     var canHarvest: Boolean? = null // not full and able to
     var canMove: Boolean? = null // is empty slot available and I am able to
-    var canAttack: Boolean? = null
+    var canAttack: Boolean? = null // is able to perform attack
 
     fun initialise() {
 
@@ -67,6 +73,8 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
             canAttack = unit.type.canAttack
         }
 
+        // -------------------------------------------------------------------------------
+        // Init of parameters:
         // -------------------------------------------------------------------------------
 
         // Resources
@@ -119,132 +127,10 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         parameters[Keys.OVERPOWERED] = friendsEnemyRatio < 0
     }
 
-    fun isEnemy(unit: Unit) = unit.player != player && unit.player != -1
-
-    fun isFriend(unit: Unit) = unit.player == player
-
-    fun isResource(unit: Unit) = unit.player == -1
-
-    fun isBase(unit: Unit) = unit.type.name == "Base"
-
-    fun isBarracks(unit: Unit) = unit.type.name == "Barracks"
-
-    fun isEnemyBarracks(unit: Unit) = isBarracks(unit) && isEnemy(unit)
-
-    fun isMyBarracks(unit: Unit) = isBarracks(unit) && isFriend(unit)
-
-    fun isMyBase(unit: Unit) = isBase(unit) && !isEnemy(unit)
-
-    fun isEnemyBase(unit: Unit) = isBase(unit) && isEnemy(unit)
-
-    fun getClosestEntity(entities: List<Unit>?): Unit? {
-        val entityDistances = getEntitiesDistances(entities)
-        if (entityDistances.keys.isNullOrEmpty()) return null
-        return entityDistances.keys.first()
-    }
-
-    fun getEntitiesDistances(entities: List<Unit>?): Map<Unit, Int> {
-        if (unit == null || entities.isNullOrEmpty()) return mapOf()
-        return entities.map { it to getUnitDistance(it)}
-                .filter { it.second >= 0 }
-                .sortedBy { (_, value) -> value }
-                .toMap()
-    }
-
-    private fun getEntityOnPosition(position: Pair<Int, Int>): Entity {
-        if (getTerrain(position) == PhysicalGameState.TERRAIN_NONE) {
-            val unitOnPosition = gs?.units?.filter { it.x == position.first && it.y == position.second }
-
-            if (unitOnPosition.isNullOrEmpty()) return Utils.Companion.Entity.NONE
-            if (unitOnPosition[0] == unit) return Utils.Companion.Entity.ME
-
-            with(unitOnPosition[0]) {
-                if (player == -1) {
-                    Utils.writeToFile("Detected resource")
-                    return Utils.Companion.Entity.RESOURCE
-                }
-                if (isMyBase(this)) return Utils.Companion.Entity.MY_BASE
-                if (isEnemyBase(this)) return Utils.Companion.Entity.ENEMY_BASE
-                return if (isEnemy(this)) Utils.Companion.Entity.ENEMY
-                else Utils.Companion.Entity.FRIEND
-            }
-        }
-        return Utils.Companion.Entity.WALL
-    }
-
-    fun getUnitDistance(toUnit: Unit): Int {
-        if (unit == null)
-            return -1
-        return abs(unit.x - toUnit.x) + abs(unit.y - toUnit.y)
-    }
-
-    fun getUnitDirection(toUnit: Unit, reverse: Boolean = false): List<Int> {
-        val directions = mutableListOf<Int>()
-        if (unit == null) return directions
-
-        if (unit.y < toUnit.y) directions.add(UnitAction.DIRECTION_DOWN)
-        else if (unit.y > toUnit.y) directions.add(UnitAction.DIRECTION_UP)
-
-        if (unit.x < toUnit.x) directions.add(UnitAction.DIRECTION_RIGHT)
-        else if (unit.x > toUnit.x) directions.add(UnitAction.DIRECTION_LEFT)
-
-        if (reverse) {
-            val reversedDirs = mutableListOf<Int>()
-            directions.forEach { reversedDirs.add(opposite(it)) }
-            return reversedDirs
-        }
-        return directions
-    }
-
-    fun opposite(direction: Int): Int = when (direction) {
-        UnitAction.DIRECTION_LEFT -> UnitAction.DIRECTION_RIGHT
-        UnitAction.DIRECTION_RIGHT -> UnitAction.DIRECTION_LEFT
-        UnitAction.DIRECTION_UP -> UnitAction.DIRECTION_DOWN
-        UnitAction.DIRECTION_DOWN -> UnitAction.DIRECTION_UP
-        else -> UnitAction.DIRECTION_NONE
-    }
-
     /**
-     * Return entity on position relative to this unit.
+     * Compares [partialState] to real state (this). Assigns priority to the [abstractAction] based
+     * on the match of the state, [strategy] (if available) and how good the action is in given state.
      */
-    private fun getEntity(direction: Int, distance: Int): Entity =
-        getEntityOnPosition(calculateNextPosition(direction, distance))
-
-    fun getEmptyDirection(): List<Int> {
-        val emptyDirections = mutableListOf<Int>()
-        Utils.directionsWithoutNone.forEach {
-            if (getEntity(it, 1) == Utils.Companion.Entity.NONE)
-                emptyDirections.add(it)
-        }
-        return emptyDirections
-    }
-
-    private fun getTerrain(position: Pair<Int, Int>): Int {
-        if (gs != null) {
-            if (gs.physicalGameState.height > position.second + 1 && gs.physicalGameState.width > position.first + 1
-                    && position.second - 1 >= 0 && position.first - 1 >= 0) {
-                return gs.physicalGameState.getTerrain(position.first, position.second)
-            }
-            return PhysicalGameState.TERRAIN_WALL
-        }
-        return PhysicalGameState.TERRAIN_NONE
-    }
-
-    private fun calculateNextPosition(direction: Int, distance: Int): Pair<Int, Int> = if (unit != null) {
-        val destinationX: Int = when (direction) {
-            UnitAction.DIRECTION_RIGHT -> unit.x + distance
-            UnitAction.DIRECTION_LEFT -> unit.x - distance
-            else -> unit.x
-        }
-
-        val destinationY: Int = when (direction) {
-            UnitAction.DIRECTION_DOWN -> unit.y + distance
-            UnitAction.DIRECTION_UP -> unit.y - distance
-            else -> unit.y
-        }
-        Pair(destinationX, destinationY)
-    } else Pair(0, 0)
-
     fun compareTo(partialState: PartialState, abstractAction: AbstractAction,
                   strategy: Strategy? = null): Double {
         var result = 0
@@ -274,6 +160,160 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         return result.toDouble() / partialState.parameters.size
     }
 
+    fun isEnemy(unit: Unit) = unit.player != player && unit.player != -1
+
+    fun isFriend(unit: Unit) = unit.player == player
+
+    fun isResource(unit: Unit) = unit.player == -1
+
+    fun isBase(unit: Unit) = unit.type.name == "Base"
+
+    fun isBarracks(unit: Unit) = unit.type.name == "Barracks"
+
+    fun isEnemyBarracks(unit: Unit) = isBarracks(unit) && isEnemy(unit)
+
+    fun isMyBarracks(unit: Unit) = isBarracks(unit) && isFriend(unit)
+
+    fun isMyBase(unit: Unit) = isBase(unit) && !isEnemy(unit)
+
+    fun isEnemyBase(unit: Unit) = isBase(unit) && isEnemy(unit)
+
+    fun getClosestEntity(entities: List<Unit>?): Unit? {
+        val entityDistances = getEntitiesDistances(entities)
+        if (entityDistances.keys.isNullOrEmpty()) return null
+        return entityDistances.keys.first()
+    }
+
+    /**
+     * Returns a list of [entities] with assigned distances relative to the current unit.
+     */
+    fun getEntitiesDistances(entities: List<Unit>?): Map<Unit, Int> {
+        if (unit == null || entities.isNullOrEmpty()) return mapOf()
+        return entities.map { it to getUnitDistance(it)}
+                .filter { it.second >= 0 }
+                .sortedBy { (_, value) -> value }
+                .toMap()
+    }
+
+    /**
+     * Returns entity on given [position].
+     */
+    private fun getEntityOnPosition(position: Pair<Int, Int>): Entity {
+        if (getTerrain(position) == PhysicalGameState.TERRAIN_NONE) {
+            val unitOnPosition = gs?.units?.filter { it.x == position.first && it.y == position.second }
+
+            if (unitOnPosition.isNullOrEmpty()) return Utils.Companion.Entity.NONE
+            if (unitOnPosition[0] == unit) return Utils.Companion.Entity.ME
+
+            with(unitOnPosition[0]) {
+                if (player == -1) {
+                    Utils.writeToFile("Detected resource")
+                    return Utils.Companion.Entity.RESOURCE
+                }
+                if (isMyBase(this)) return Utils.Companion.Entity.MY_BASE
+                if (isEnemyBase(this)) return Utils.Companion.Entity.ENEMY_BASE
+                return if (isEnemy(this)) Utils.Companion.Entity.ENEMY
+                else Utils.Companion.Entity.FRIEND
+            }
+        }
+        return Utils.Companion.Entity.WALL
+    }
+
+    /**
+     * Calculates distance to the [toUnit].
+     */
+    fun getUnitDistance(toUnit: Unit): Int {
+        if (unit == null)
+            return -1
+        return abs(unit.x - toUnit.x) + abs(unit.y - toUnit.y)
+    }
+
+    /**
+     * Returns relative direction to the given [toUnit].
+     * When [reverse] is true, the direction is opposite.
+     */
+    fun getUnitDirection(toUnit: Unit, reverse: Boolean = false): List<Int> {
+        val directions = mutableListOf<Int>()
+        if (unit == null) return directions
+
+        if (unit.y < toUnit.y) directions.add(UnitAction.DIRECTION_DOWN)
+        else if (unit.y > toUnit.y) directions.add(UnitAction.DIRECTION_UP)
+
+        if (unit.x < toUnit.x) directions.add(UnitAction.DIRECTION_RIGHT)
+        else if (unit.x > toUnit.x) directions.add(UnitAction.DIRECTION_LEFT)
+
+        if (reverse) {
+            val reversedDirs = mutableListOf<Int>()
+            directions.forEach { reversedDirs.add(opposite(it)) }
+            return reversedDirs
+        }
+        return directions
+    }
+
+    /**
+     * Returns opposite direction.
+     */
+    fun opposite(direction: Int): Int = when (direction) {
+        UnitAction.DIRECTION_LEFT -> UnitAction.DIRECTION_RIGHT
+        UnitAction.DIRECTION_RIGHT -> UnitAction.DIRECTION_LEFT
+        UnitAction.DIRECTION_UP -> UnitAction.DIRECTION_DOWN
+        UnitAction.DIRECTION_DOWN -> UnitAction.DIRECTION_UP
+        else -> UnitAction.DIRECTION_NONE
+    }
+
+    /**
+     * Return entity on position relative to this unit.
+     */
+    private fun getEntity(direction: Int, distance: Int): Entity =
+        getEntityOnPosition(calculateNextPosition(direction, distance))
+
+    /**
+     * Returns available empty direction (with no units or resources).
+     */
+    fun getEmptyDirection(): List<Int> {
+        val emptyDirections = mutableListOf<Int>()
+        Utils.directionsWithoutNone.forEach {
+            if (getEntity(it, 1) == Utils.Companion.Entity.NONE)
+                emptyDirections.add(it)
+        }
+        return emptyDirections
+    }
+
+    /**
+     * Returns what kind of terrain is on given coordinates. Empty or wall.
+     */
+    private fun getTerrain(position: Pair<Int, Int>): Int {
+        if (gs != null) {
+            if (gs.physicalGameState.height > position.second + 1 && gs.physicalGameState.width > position.first + 1
+                    && position.second - 1 >= 0 && position.first - 1 >= 0) {
+                return gs.physicalGameState.getTerrain(position.first, position.second)
+            }
+            return PhysicalGameState.TERRAIN_WALL
+        }
+        return PhysicalGameState.TERRAIN_NONE
+    }
+
+    /**
+     * Calculates next position of unit if going to [direction], in a given [distance].
+     */
+    private fun calculateNextPosition(direction: Int, distance: Int): Pair<Int, Int> = if (unit != null) {
+        val destinationX: Int = when (direction) {
+            UnitAction.DIRECTION_RIGHT -> unit.x + distance
+            UnitAction.DIRECTION_LEFT -> unit.x - distance
+            else -> unit.x
+        }
+
+        val destinationY: Int = when (direction) {
+            UnitAction.DIRECTION_DOWN -> unit.y + distance
+            UnitAction.DIRECTION_UP -> unit.y - distance
+            else -> unit.y
+        }
+        Pair(destinationX, destinationY)
+    } else Pair(0, 0)
+
+    /**
+     * Returns [UnitType] that this unit is bale to produce and afford.
+     */
     fun whatToProduce(): UnitType? {
         if (unit == null) return null
         unit.type.produces.shuffled().forEach {
@@ -283,7 +323,10 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         return null
     }
 
-    fun isEntity(unit: Unit, entity: Utils.Companion.Entity?): Boolean {
+    /**
+     * Returns true if [unit] is the type of entity [entity]. False otherwise.
+     */
+    fun isEntity(unit: Unit, entity: Entity?): Boolean {
         if (entity == null) return false
         return when (entity) {
             Utils.Companion.Entity.FRIEND -> isFriend(unit)
@@ -295,7 +338,10 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         }
     }
 
-    fun getInputs(): Array<Float> {
+    /**
+     * Transform parameters into input array for NEAT.
+     */
+    fun getNeatInputs(): Array<Float> {
         val list = mutableListOf<Float>()
         parameters.forEach {
             list.add(it.value.toFloat())

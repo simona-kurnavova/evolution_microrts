@@ -11,10 +11,9 @@ import ai.evolution.utils.TrainingUtils.ADAPTIVE_BUDGET
 import ai.evolution.utils.TrainingUtils.BUDGET_ADAPT_CONSTANT
 import ai.evolution.utils.TrainingUtils.BUDGET_INITIAL
 import ai.evolution.utils.TrainingUtils.BUDGET_EPOCH_STEP
-import ai.evolution.utils.TrainingUtils.BUDGET_UPPER_LIMIT
 import ai.evolution.utils.TrainingUtils.SAVE_POPULATION_INTERVAL
 import ai.evolution.utils.TrainingUtils.getActiveAIS
-import ai.evolution.decisionMaker.UnitDecisionMaker
+import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.utils.BudgetUtils
 import ai.evolution.utils.TrainingUtils.EPOCH_COUNT
 import com.google.gson.Gson
