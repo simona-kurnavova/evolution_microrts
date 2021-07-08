@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import ai.evolution.decisionMaker.TrainingUtils;
+import ai.evolution.utils.TrainingUtils;
 import rts.GameState;
 import rts.PlayerAction;
 import rts.PlayerActionGenerator;

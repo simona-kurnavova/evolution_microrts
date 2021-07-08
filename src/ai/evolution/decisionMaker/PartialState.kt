@@ -1,8 +1,8 @@
 package ai.evolution.decisionMaker
 
-import ai.evolution.Utils.Companion.coinToss
-import ai.evolution.Utils.Companion.keys
-import ai.evolution.decisionMaker.TrainingUtils.UTT_VERSION
+import ai.evolution.utils.Utils.Companion.coinToss
+import ai.evolution.utils.Utils.Companion.keys
+import ai.evolution.utils.TrainingUtils.UTT_VERSION
 import rts.units.UnitTypeTable
 
 /**

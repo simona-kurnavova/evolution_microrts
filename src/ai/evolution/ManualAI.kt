@@ -2,6 +2,7 @@ package ai.evolution
 
 import ai.core.AI
 import ai.core.ParameterSpecification
+import ai.evolution.utils.Utils
 import rts.GameState
 import rts.PlayerAction
 import rts.UnitAction

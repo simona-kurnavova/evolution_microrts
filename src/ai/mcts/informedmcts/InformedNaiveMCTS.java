@@ -10,7 +10,7 @@ import ai.core.AIWithComputationBudget;
 import ai.core.ParameterSpecification;
 import ai.evaluation.EvaluationFunction;
 import ai.evaluation.SimpleSqrtEvaluationFunction3;
-import ai.evolution.decisionMaker.TrainingUtils;
+import ai.evolution.utils.TrainingUtils;
 import ai.machinelearning.bayes.ActionInterdependenceModel;
 import ai.machinelearning.bayes.BayesianModelByUnitTypeWithDefaultModel;
 import ai.machinelearning.bayes.featuregeneration.FeatureGeneratorSimple;

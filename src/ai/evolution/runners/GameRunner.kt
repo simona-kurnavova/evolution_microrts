@@ -3,19 +3,21 @@ package ai.evolution.runners
 import ai.core.AI
 import ai.core.AIWithComputationBudget
 import ai.evolution.*
-import ai.evolution.Utils.Companion.actions
-import ai.evolution.Utils.Companion.entitiesWithoutMe
+import ai.evolution.utils.Utils.Companion.actions
+import ai.evolution.utils.Utils.Companion.entities
 import ai.evolution.decisionMaker.AbstractAction
 import ai.evolution.decisionMaker.AbstractAction.Companion.types
 import ai.evolution.decisionMaker.State
-import ai.evolution.decisionMaker.TrainingUtils
-import ai.evolution.decisionMaker.TrainingUtils.BUDGET_INITIAL
-import ai.evolution.decisionMaker.TrainingUtils.TESTING_BUDGET
-import ai.evolution.decisionMaker.TrainingUtils.TESTING_RUNS
-import ai.evolution.decisionMaker.TrainingUtils.UTT_VERSION
+import ai.evolution.utils.TrainingUtils
+import ai.evolution.utils.TrainingUtils.BUDGET_INITIAL
+import ai.evolution.utils.TrainingUtils.MODE
+import ai.evolution.utils.TestingUtils.TESTING_BUDGET
+import ai.evolution.utils.TestingUtils.TESTING_RUNS
+import ai.evolution.utils.TrainingUtils.UTT_VERSION
 import ai.evolution.decisionMaker.UnitDecisionMaker
 import ai.evolution.neat.Genome
 import ai.evolution.strategyDecisionMaker.GlobalState
+import ai.evolution.utils.Utils
 import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
@@ -28,23 +30,19 @@ class GameRunner(val gameSettings: GameSettings,
     fun runGame(evaluate: (State, GlobalState) -> List<AbstractAction>, enemyAi: String, player: Int, budget: Int = BUDGET_INITIAL): Pair<Double, Boolean>? {
         val utt = UnitTypeTable(UTT_VERSION)
 
-        val evolutionAI = EvolutionAI(evaluate, utt)
         val constructor = Class.forName(enemyAi).getConstructor(UnitTypeTable::class.java)
         val ai = (constructor.newInstance(utt) as AI)
         if (ai is AIWithComputationBudget) {
             ai.timeBudget = budget
         }
 
-        val game = Game(utt, TrainingUtils.MAP_LOCATION, TrainingUtils.HEADLESS,
-                TrainingUtils.PARTIALLY_OBSERVABLE, TrainingUtils.MAX_CYCLES, TrainingUtils.UPDATE_INTERVAL,
-                if (player == 0) evolutionAI else ai,
-                if (player == 1) evolutionAI else ai)
-        try {
-            return fitness(game, game.start()[player], player)
-        } catch (e: Exception) {
-            Utils.writeToFile("error: ${e.message}")
-        }
-        return null
+        return playGame(utt, player, EvolutionAI(evaluate, utt), ai)
+    }
+
+    fun runTournament(evaluate1: (State, GlobalState) -> List<AbstractAction>,
+                      evaluate2: (State, GlobalState) -> List<AbstractAction>, player: Int = 0): Pair<Double, Boolean>? {
+        val utt = UnitTypeTable(UTT_VERSION)
+        return playGame(utt, player,  EvolutionAI(evaluate1, utt), EvolutionAI(evaluate2, utt))
     }
 
     fun runGameForAIs(evaluate: (State, GlobalState) -> List<AbstractAction>, ais: List<String>, print: Boolean = false,
@@ -80,6 +78,53 @@ class GameRunner(val gameSettings: GameSettings,
         return Pair(globalFitness / (runsPerAi * ais.size), globalWins)
     }
 
+    fun playTransparentGame(ai1: String, ai2: String, runs: Int) {
+        val utt = UnitTypeTable(UTT_VERSION)
+
+        var constructor = Class.forName(ai1).getConstructor(UnitTypeTable::class.java)
+        val ai_1 = (constructor.newInstance(utt) as AI)
+        if (ai_1 is AIWithComputationBudget) {
+            ai_1.timeBudget = BUDGET_INITIAL
+        }
+
+        constructor = Class.forName(ai2).getConstructor(UnitTypeTable::class.java)
+        val ai_2 = (constructor.newInstance(utt) as AI)
+        if (ai_2 is AIWithComputationBudget) {
+            ai_2.timeBudget = BUDGET_INITIAL
+        }
+
+        repeat(runs) {
+            val game = getGame(utt, 0, ai_1, ai_2)
+            try {
+                game.start()
+            } catch (e: Exception) {
+                Utils.writeEverywhere("error: ${e.cause} from playTransparentGame()")
+                Utils.writeEverywhere("error: ${e.printStackTrace()}")
+            }
+        }
+    }
+
+    private fun playGame(utt: UnitTypeTable, player: Int, ai1: AI, ai2: AI): Pair<Double, Boolean>?  {
+        val game = getGame(utt, player, ai1, ai2)
+        try {
+            val fitness = fitness(game, game.start()[player], player)
+            if (ai1 is EvolutionAI && MODE == TrainingUtils.Mode.TESTING) {
+                //println("Average time of getAction() call is ${ai1.getAverageActionTime()} ns / " +
+                //    "${ai1.getAverageActionTime() / 1000000} ms")
+            }
+            return fitness
+        } catch (e: Exception) {
+            Utils.writeEverywhere("error: ${e.cause} from playGame()")
+            Utils.writeEverywhere("error: ${e.printStackTrace()}")
+        }
+        return null
+    }
+
+    private fun getGame(utt: UnitTypeTable, player: Int, ai1: AI, ai2: AI) = Game(utt, TrainingUtils.MAP_LOCATION, TrainingUtils.HEADLESS,
+            TrainingUtils.PARTIALLY_OBSERVABLE, TrainingUtils.MAX_CYCLES, TrainingUtils.UPDATE_INTERVAL,
+            if (player == 0) ai1 else ai2,
+            if (player == 1) ai1 else ai2)
+
     companion object {
 
         fun getEvaluateLambda(unitDecisionMaker: UnitDecisionMaker) = { s: State, gs: GlobalState ->
@@ -105,19 +150,19 @@ class GameRunner(val gameSettings: GameSettings,
 
                 // 7: entitiesWithoutMe
                 abstractAction.entity =
-                        entitiesWithoutMe[getHotOneIndex(decision.subList(offset, offset + entitiesWithoutMe.size))]
+                        entities[getHotOneIndex(decision.subList(offset, offset + entities.size))]
             }
 
             val unitTypes = UnitTypeTable(UTT_VERSION).unitTypes
             if (abstractAction.action == TYPE_PRODUCE) {
                 // 7: what to produce
-                offset += 2 + entitiesWithoutMe.size
+                offset += 2 + entities.size
                 abstractAction.unitToProduce =
                         unitTypes[getHotOneIndex(decision.subList(offset, offset + unitTypes.size))].name
             }
 
             if (abstractAction.action == TYPE_ATTACK_LOCATION) {
-                offset += 2 + entitiesWithoutMe.size + unitTypes.size
+                offset += 2 + entities.size + unitTypes.size
                 abstractAction.entity = if(getHotOneIndex(decision.subList(offset, offset + 2)) == 0)
                     Utils.Companion.Entity.ENEMY
                 else Utils.Companion.Entity.ENEMY_BASE

@@ -1,16 +1,17 @@
 package ai.evolution.operators
 
-import ai.evolution.Utils
+import ai.evolution.utils.Utils
 import ai.evolution.decisionMaker.UnitDecisionMaker
-import ai.evolution.decisionMaker.TrainingUtils.CANDIDATE_COUNT
-import ai.evolution.decisionMaker.TrainingUtils.PARENT_COUNT
-import ai.evolution.decisionMaker.TrainingUtils.POPULATION
+import ai.evolution.utils.TrainingUtils.POPULATION
 import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 
 /**
  * Object for crossover implementations.
  */
 object Crossover {
+
+    private const val CANDIDATE_COUNT = 2
+
     /**
      * Uses tournament selection for crossover of [candidatesFitnessList]. Returns children of size [POPULATION].
      */
@@ -19,8 +20,8 @@ object Crossover {
         repeat(POPULATION) {
             val parentCandidates = candidatesFitnessList
                     .shuffled()
-                    .take(PARENT_COUNT * CANDIDATE_COUNT)
-                    .chunked(PARENT_COUNT)
+                    .take(2 * CANDIDATE_COUNT)
+                    .chunked(2)
             val parents = mutableListOf<Utils.Companion.UnitCandidate>()
             parentCandidates.forEach { parents.add(it.maxByOrNull { it.fitness }!!) }
 
@@ -36,8 +37,8 @@ object Crossover {
         val children = mutableListOf<StrategyDecisionMaker>()
         repeat(POPULATION) {
             val parentCandidates = candidatesFitnessList.shuffled()
-                    .take(PARENT_COUNT * CANDIDATE_COUNT)
-                    .chunked(PARENT_COUNT)
+                    .take(2 * CANDIDATE_COUNT)
+                    .chunked(2)
             val parents = mutableListOf<Utils.Companion.StrategyCandidate>()
             parentCandidates.forEach { parents.add(it.maxByOrNull { it.fitness }!!) }
             // Add child and MUTATE it

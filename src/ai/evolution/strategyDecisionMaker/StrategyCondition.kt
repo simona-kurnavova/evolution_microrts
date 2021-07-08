@@ -1,6 +1,6 @@
 package ai.evolution.strategyDecisionMaker
 
-import ai.evolution.Utils.Companion.coinToss
+import ai.evolution.utils.Utils.Companion.coinToss
 
 class StrategyCondition {
     val partialGlobalState: PartialGlobalState = PartialGlobalState()

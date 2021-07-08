@@ -1,15 +1,20 @@
 package ai.evolution.decisionMaker
 
-import ai.evolution.Utils
-import ai.evolution.Utils.Companion.Entity
-import ai.evolution.Utils.Companion.Keys
-import ai.evolution.decisionMaker.TrainingUtils.MAP_WIDTH
+import ai.evolution.utils.Utils
+import ai.evolution.utils.Utils.Companion.Entity
+import ai.evolution.utils.Utils.Companion.Keys
+import ai.evolution.utils.TrainingUtils.MAP_WIDTH
 import ai.evolution.strategyDecisionMaker.Strategy
+import ai.evolution.utils.TrainingUtils
+import ai.evolution.utils.Utils.Companion.writeToFile
+import com.google.gson.Gson
+import com.google.gson.annotations.Expose
 import rts.GameState
 import rts.PhysicalGameState
 import rts.UnitAction
 import rts.units.Unit
 import rts.units.UnitType
+import java.io.File
 import kotlin.math.abs
 
 open class State(val player: Int? = null, val gs: GameState? = null, val unit: Unit? = null) {
@@ -20,7 +25,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     /**
      * Distance = 1; 4 directions
      */
-    private val entityClose: MutableList<Entity> = mutableListOf()
+    val entityClose: MutableList<Entity> = mutableListOf()
 
     /**
      * Base distance.
@@ -39,6 +44,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
     var canHarvest: Boolean? = null // not full and able to
     var canMove: Boolean? = null // is empty slot available and I am able to
+    var canAttack: Boolean? = null
 
     fun initialise() {
 
@@ -58,6 +64,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
 
             canMove = unit.type.canMove && entityClose.contains(Entity.NONE)
             canHarvest = unit.type.canHarvest && entityClose.contains(Entity.RESOURCE)
+            canAttack = unit.type.canAttack
         }
 
         // -------------------------------------------------------------------------------
@@ -65,9 +72,9 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         // Resources
         parameters[Keys.HAVE_RESOURCES] = playerResources != 0
         parameters[Keys.CARRY_RESOURCES] = unitResources != 0
-        parameters[Keys.RESOURCE_REACHABLE] = entityClose.contains(Entity.RESOURCE)
         parameters[Keys.RESOURCE_CLOSE] = entitiesDistances.filter { isResource(it.key) && it.value < tolerance }
                 .isNotEmpty()
+        parameters[Keys.RESOURCE_REACHABLE] = entityClose.contains(Entity.RESOURCE)
         parameters[Keys.BASE_CLOSE] = entitiesDistances.filter { isMyBase(it.key) && it.value < tolerance }
                 .isNotEmpty()
         parameters[Keys.BASE_REACHABLE] = entityClose.contains(Entity.MY_BASE)
@@ -98,6 +105,11 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
         parameters[Keys.ENEMY_BARRACKS_CLOSE] = entitiesDistances.filter { isEnemyBarracks(it.key) && it.value < tolerance }
                 .isNotEmpty()
         parameters[Keys.ENEMY_BARRACKS_REACHABLE] = entitiesDistances.filter { isEnemyBarracks(it.key) && it.value <= 1 }
+                .isNotEmpty()
+
+        parameters[Keys.BARRACKS_CLOSE] = entitiesDistances.filter { isMyBarracks(it.key) && it.value < tolerance }
+                .isNotEmpty()
+        parameters[Keys.BARRACKS_REACHABLE] = entitiesDistances.filter { isMyBarracks(it.key) && it.value <= 1 }
                 .isNotEmpty()
 
         // My team
@@ -139,7 +151,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
                 .toMap()
     }
 
-    private fun getEntityOnPosition(position: Pair<Int, Int>): Utils.Companion.Entity {
+    private fun getEntityOnPosition(position: Pair<Int, Int>): Entity {
         if (getTerrain(position) == PhysicalGameState.TERRAIN_NONE) {
             val unitOnPosition = gs?.units?.filter { it.x == position.first && it.y == position.second }
 
@@ -195,7 +207,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     /**
      * Return entity on position relative to this unit.
      */
-    private fun getEntity(direction: Int, distance: Int): Utils.Companion.Entity =
+    private fun getEntity(direction: Int, distance: Int): Entity =
         getEntityOnPosition(calculateNextPosition(direction, distance))
 
     fun getEmptyDirection(): List<Int> {
@@ -210,7 +222,7 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
     private fun getTerrain(position: Pair<Int, Int>): Int {
         if (gs != null) {
             if (gs.physicalGameState.height > position.second + 1 && gs.physicalGameState.width > position.first + 1
-                    && position.second - 1 > 0 && position.first - 1 > 0) {
+                    && position.second - 1 >= 0 && position.first - 1 >= 0) {
                 return gs.physicalGameState.getTerrain(position.first, position.second)
             }
             return PhysicalGameState.TERRAIN_WALL

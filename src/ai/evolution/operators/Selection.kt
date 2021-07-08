@@ -1,9 +1,8 @@
 package ai.evolution.operators
 
-import ai.evolution.DecisionMaker
-import ai.evolution.decisionMaker.TrainingUtils
-import ai.evolution.Utils.Companion.StrategyCandidate
-import ai.evolution.Utils.Companion.UnitCandidate
+import ai.evolution.utils.TrainingUtils
+import ai.evolution.utils.Utils.Companion.StrategyCandidate
+import ai.evolution.utils.Utils.Companion.UnitCandidate
 import ai.evolution.decisionMaker.UnitDecisionMaker
 
 

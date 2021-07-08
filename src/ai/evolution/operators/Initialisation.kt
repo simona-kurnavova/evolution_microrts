@@ -1,11 +1,11 @@
 package ai.evolution.operators
 
 import ai.evolution.decisionMaker.UnitDecisionMaker
-import ai.evolution.decisionMaker.TrainingUtils
-import ai.evolution.decisionMaker.TrainingUtils.LOAD_FROM_FILE
-import ai.evolution.decisionMaker.TrainingUtils.LOAD_POPULATION_FILE
-import ai.evolution.strategyDecisionMaker.StrategyTrainingUtils
-import ai.evolution.decisionMaker.TrainingUtils.POPULATION
+import ai.evolution.utils.TrainingUtils
+import ai.evolution.utils.TrainingUtils.LOAD_FROM_FILE
+import ai.evolution.utils.TrainingUtils.LOAD_POPULATION_FILE
+import ai.evolution.utils.StrategyTrainingUtils
+import ai.evolution.utils.TrainingUtils.POPULATION
 import ai.evolution.runners.TestingRunner
 import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 

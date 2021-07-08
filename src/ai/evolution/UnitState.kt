@@ -1,13 +1,13 @@
 package ai.evolution
 
-import ai.evolution.decisionMaker.TrainingUtils.MAP_WIDTH
+import ai.evolution.utils.TrainingUtils.MAP_WIDTH
 import rts.GameState
 import rts.PhysicalGameState.TERRAIN_NONE
 import rts.PhysicalGameState.TERRAIN_WALL
 import rts.UnitAction
 import rts.units.Unit
-import ai.evolution.Utils.Companion.Entity
-import ai.evolution.Utils.Companion.directionsWithoutNone
+import ai.evolution.utils.Utils.Companion.Entity
+import ai.evolution.utils.Utils.Companion.directionsWithoutNone
 import rts.UnitAction.DIRECTION_NONE
 
 class UnitState(val player: Int, val gs: GameState, val unit: Unit) {

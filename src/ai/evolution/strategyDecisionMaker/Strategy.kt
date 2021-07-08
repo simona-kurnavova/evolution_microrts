@@ -1,8 +1,8 @@
 package ai.evolution.strategyDecisionMaker
 
-import ai.evolution.decisionMaker.TrainingUtils.UTT_VERSION
-import ai.evolution.Utils.Companion.actions
-import ai.evolution.Utils.Companion.coinToss
+import ai.evolution.utils.TrainingUtils.UTT_VERSION
+import ai.evolution.utils.Utils.Companion.actions
+import ai.evolution.utils.Utils.Companion.coinToss
 import ai.evolution.decisionMaker.AbstractAction
 import rts.UnitAction.TYPE_PRODUCE
 import rts.units.UnitTypeTable

@@ -1,10 +1,10 @@
 package ai.evolution
 
 import ai.evolution.decisionMaker.UnitDecisionMaker
-import ai.evolution.decisionMaker.TrainingUtils.ACTIVE_START
-import ai.evolution.decisionMaker.TrainingUtils.getActiveAIS
-import ai.evolution.decisionMaker.TrainingUtils.getPassiveAIS
-import ai.evolution.Utils.Companion.UnitCandidate
+import ai.evolution.utils.TrainingUtils.ACTIVE_START
+import ai.evolution.utils.TrainingUtils.getActiveAIS
+import ai.evolution.utils.TrainingUtils.getPassiveAIS
+import ai.evolution.utils.Utils.Companion.UnitCandidate
 import ai.evolution.operators.Crossover
 import ai.evolution.operators.Fitness
 import ai.evolution.operators.Initialisation

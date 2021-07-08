@@ -1,8 +1,8 @@
 package ai.evolution.decisionMaker
 
 import ai.evolution.DecisionMaker
-import ai.evolution.decisionMaker.TrainingUtils.COND_MUT_PROB
-import ai.evolution.Utils.Companion.coinToss
+import ai.evolution.utils.TrainingUtils.COND_MUT_PROB
+import ai.evolution.utils.Utils.Companion.coinToss
 import ai.evolution.strategyDecisionMaker.GlobalState
 import ai.evolution.strategyDecisionMaker.StrategyDecisionMaker
 import com.google.gson.Gson

@@ -1,6 +1,7 @@
 package ai.evolution.decisionMaker
 
-import ai.evolution.Utils
+import ai.evolution.utils.TrainingUtils
+import ai.evolution.utils.Utils
 import rts.UnitAction
 import rts.units.Unit
 import rts.units.UnitTypeTable
@@ -40,13 +41,17 @@ class AbstractAction {
 
     fun onActionChangeSetup() {
         type = Type.TO_ENTITY
+
         when (action) {
-            UnitAction.TYPE_PRODUCE -> unitToProduce = if (TrainingUtils.ALLOW_WORKERS_ONLY) "Worker"
-            else UnitTypeTable(TrainingUtils.UTT_VERSION).unitTypes.random().name
-            UnitAction.TYPE_ATTACK_LOCATION -> entity = if (Utils.coinToss(TrainingUtils.PROB_BASE_ATTACK))
+            UnitAction.TYPE_PRODUCE -> {
+                unitToProduce = UnitTypeTable(TrainingUtils.UTT_VERSION).unitTypes.random().name
+            }
+            UnitAction.TYPE_ATTACK_LOCATION -> {
+                entity = if (Utils.coinToss(TrainingUtils.PROB_BASE_ATTACK))
                 Utils.Companion.Entity.ENEMY_BASE else Utils.Companion.Entity.ENEMY
+            }
             UnitAction.TYPE_MOVE -> {
-                entity = if (entity != null) entity else Utils.entitiesWithoutMe.random()
+                entity = if (entity != null) entity else Utils.entities.random()
                 type = types.random()
             }
         }
@@ -65,9 +70,11 @@ class AbstractAction {
         val toUnit = realState.getClosestEntity(realState.gs?.units?.filter { unitFilter(it) })
         if (toUnit != null) {
             val directions = realState.getUnitDirection(toUnit, reverseDirection)
-            val range = if (action == UnitAction.TYPE_ATTACK_LOCATION) realState.unit?.attackRange else 1
+            val range = if (action == UnitAction.TYPE_ATTACK_LOCATION)
+                realState.unit?.attackRange else 1
             if (realState.getUnitDistance(toUnit) == range && !reverseDirection) {
-                if (action == UnitAction.TYPE_ATTACK_LOCATION) return UnitAction(action, toUnit.x, toUnit.y)
+                if (action == UnitAction.TYPE_ATTACK_LOCATION && realState.canAttack!!)
+                    return UnitAction(action, toUnit.x, toUnit.y)
                 return UnitAction(action, directions[0])
             } else {
                 val emptyDirections = realState.getEmptyDirection()

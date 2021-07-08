@@ -1,6 +1,6 @@
 package ai.evolution.decisionMaker
 
-import ai.evolution.Utils.Companion.coinToss
+import ai.evolution.utils.Utils.Companion.coinToss
 
 class Condition {
 

@@ -1,8 +1,5 @@
 package rts
 
-import ai.evolution.Utils.Companion.writeToFile
-import javax.swing.Action
-
 public class ActionStatistics {
     @JvmField
     var damageDone = 0

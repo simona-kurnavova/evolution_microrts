@@ -1,7 +1,7 @@
 package ai.evolution.operators
 
-import ai.evolution.Utils
-import ai.evolution.decisionMaker.TrainingUtils
+import ai.evolution.utils.Utils.Companion.PlayerStatistics
+import ai.evolution.utils.TrainingUtils
 import rts.ActionStatistics
 import rts.Game
 import rts.PhysicalGameState
@@ -9,13 +9,19 @@ import kotlin.math.abs
 
 object Fitness {
 
-    fun basicFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
-        val stats: List<Utils.Companion.PlayerStatistics> = getStats(game.gs.physicalGameState)
-        val hp: Double = stats[player].hp.toDouble() - stats[abs(player - 1)].hp
-        val hpBase: Double = stats[player].hpBase.toDouble() - stats[abs(player - 1)].hpBase
-
+    fun timeIndependentFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
         var points = playerStats.damageDone.toDouble() + playerStats.produced - playerStats.enemyDamage +
-                    hp + (hpBase * 10)
+                getHp(game, player) + (getBaseHp(game, player) * 10)
+        if (epoch == null || epoch >= TrainingUtils.ACTIVE_START)
+            if (game.gs.winner() == player) {
+                points += 300
+            }
+        return Pair(points, game.gs.winner() == player)
+    }
+
+    fun basicFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
+        var points = playerStats.damageDone.toDouble() + playerStats.produced - playerStats.enemyDamage +
+                    getHp(game, player) + (getBaseHp(game, player) * 10)
 
         if (epoch == null || epoch >= TrainingUtils.ACTIVE_START)
             if (game.gs.winner() == player) {
@@ -26,11 +32,7 @@ object Fitness {
     }
 
     fun aggressiveFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
-        val stats: List<Utils.Companion.PlayerStatistics> = getStats(game.gs.physicalGameState)
-        val hp: Double = stats[player].hp.toDouble() - stats[abs(player - 1)].hp
-        val hpBase: Double = stats[player].hpBase.toDouble() - stats[abs(player - 1)].hpBase
-
-        var points = playerStats.damageDone.toDouble() + (hpBase * 10)
+        var points = playerStats.damageDone.toDouble() + (getBaseHp(game, player) * 10)
 
         if (epoch == null || epoch >= TrainingUtils.ACTIVE_START)
             if (game.gs.winner() == player) {
@@ -41,11 +43,7 @@ object Fitness {
     }
 
     fun productiveFitness(game: Game, playerStats: ActionStatistics, player: Int, epoch: Int?): Pair<Double, Boolean> {
-        val stats: List<Utils.Companion.PlayerStatistics> = getStats(game.gs.physicalGameState)
-        val hp: Double = stats[player].hp.toDouble() - stats[abs(player - 1)].hp
-        val hpBase: Double = stats[player].hpBase.toDouble() - stats[abs(player - 1)].hpBase
-
-        var points = playerStats.enemyHarvest + playerStats.produced + (hpBase * 10)
+        var points = playerStats.resHarvested + playerStats.produced + (getBaseHp(game, player) * 10)
 
         if (epoch == null || epoch >= TrainingUtils.ACTIVE_START)
             if (game.gs.winner() == player) {
@@ -55,10 +53,20 @@ object Fitness {
         return Pair(points, game.gs.winner() == player)
     }
 
-    private fun getStats(physicalGameState: PhysicalGameState): List<Utils.Companion.PlayerStatistics> {
-        val players = ArrayList<Utils.Companion.PlayerStatistics>()
+    private fun getHp(game: Game, player: Int): Double {
+        val stats = getStats(game.gs.physicalGameState)
+        return stats[player].hp.toDouble() - stats[abs(player - 1)].hp
+    }
+
+    private fun getBaseHp(game: Game, player: Int): Double {
+        val stats = getStats(game.gs.physicalGameState)
+        return stats[player].hpBase.toDouble() - stats[abs(player - 1)].hpBase
+    }
+
+    private fun getStats(physicalGameState: PhysicalGameState): List<PlayerStatistics> {
+        val players = ArrayList<PlayerStatistics>()
         for (p in physicalGameState.players) {
-            val playerStatistics = Utils.Companion.PlayerStatistics(
+            val playerStatistics = PlayerStatistics(
                     id = p.id,
                     units = physicalGameState.units.filter { it.player == p.id },
                     hp = physicalGameState.units.filter { it.player == p.id }.sumBy { it.hitPoints },

@@ -1,6 +1,9 @@
 package rts;
 
 import ai.core.AI;
+import ai.evolution.decisionMaker.State;
+import ai.evolution.utils.Utils;
+import com.google.gson.Gson;
 import gui.PhysicalGameStatePanel;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -146,7 +149,9 @@ public class Game {
             rts.GameState playerTwoGameState =
                     partiallyObservable ? new PartiallyObservableGameState(gs, 1) : gs;
 
+
             rts.PlayerAction pa1 = ai1.getAction(0, playerOneGameState);
+
             rts.PlayerAction pa2 = ai2.getAction(1, playerTwoGameState);
             gs.issueSafe(pa1);
             gs.issueSafe(pa2);

@@ -1,15 +1,17 @@
 package ai.evolution
 
-import ai.evolution.Utils.Companion.writeEverywhere
-import ai.evolution.decisionMaker.TrainingUtils
-import ai.evolution.decisionMaker.TrainingUtils.BUDGET_INITIAL
-import ai.evolution.decisionMaker.TrainingUtils.TESTING_INTERVAL
-import ai.evolution.decisionMaker.TrainingUtils.TESTING_WHILE_TRAINING
+import ai.evolution.utils.Utils.Companion.writeEverywhere
+import ai.evolution.utils.TrainingUtils
+import ai.evolution.utils.TrainingUtils.BUDGET_INITIAL
+import ai.evolution.utils.TrainingUtils.TESTING_INTERVAL
+import ai.evolution.utils.TrainingUtils.TESTING_WHILE_TRAINING
 import ai.evolution.decisionMaker.UnitDecisionMaker
 import ai.evolution.runners.GameRunner
 import ai.evolution.runners.TestingRunner
-import ai.evolution.Utils.Companion.UnitCandidate
-import ai.evolution.decisionMaker.TrainingUtils.BEST_LIST_SIZE
+import ai.evolution.utils.Utils.Companion.UnitCandidate
+import ai.evolution.utils.TrainingUtils.BEST_LIST_SIZE
+import ai.evolution.utils.TrainingUtils.TRESHOLD_FITNESS
+import ai.evolution.utils.Utils
 import com.google.gson.Gson
 import rts.ActionStatistics
 import rts.Game
@@ -91,7 +93,7 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
      */
     fun saveBestIfFound(candidatesFitnessList: MutableList<UnitCandidate>): Boolean {
         val best = bestCandidate ?: candidatesFitnessList[0]
-        if (best.wins >= TrainingUtils.getActiveAIS().size) {
+        if (best.wins >= TrainingUtils.getActiveAIS().size && best.fitness >= TRESHOLD_FITNESS) {
             Utils.writeToFile("Found best unit of Fitness: " + "${best.fitness}")
 
             // Save best unit to file
