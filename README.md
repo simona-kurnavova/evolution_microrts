@@ -3,7 +3,7 @@
 This is an implementation of two RTS game AI models using the MicroRTS framework written by microRTS
 (see [Github repository](https://github.com/santiontanon/microrts) or [oficial MicroRTS website](https://sites.google.com/site/micrortsaicompetition/home)) 
 
-Models (located in *src/ai/evolution/*): 
+Models (located in *src/ai/evolution/*, run by *src/gui/frontend/EvolutionUI*): 
 - Genetic programming model
 - NEAT model (implementation is based on [evo-NEAT](https://github.com/vishnugh/evo-NEAT))
 
@@ -54,7 +54,7 @@ const val HIDDEN_UNITS = 100000 // number of hidden units of networks
 ```
 **Note**: you can also change mutation probabilities and other parameters of NEAT directly in src/ai/evolution/neat/NEAT_config
 
-Run MicroRTS with "EVOLUTION" value in resources/config.properties file:
+Add "EVOLUTION" value in resources/config.properties file and run application from MicroRTS class:
 ```kotlin
 launch_mode=EVOLUTION
 ```

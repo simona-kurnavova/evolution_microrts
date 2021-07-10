@@ -1,8 +1,7 @@
 package rts;
 
-//import gui.frontend.FrontEnd;
 import gui.frontend.FrontEnd;
-import gui.frontend.TrainingUI;
+import gui.frontend.EvolutionUI;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -58,7 +57,7 @@ public class MicroRTS {
                 startClient(gameSettings);
                 break;
             case EVOLUTION:
-                TrainingUI.Companion.train(gameSettings);
+                EvolutionUI.Companion.run(gameSettings);
                 break;
         }
     }

@@ -13,16 +13,14 @@ import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
 
-class TrainingUI {
+class EvolutionUI {
     
     companion object {
 
-        fun main(gameSettings: GameSettings) {
-            train(gameSettings)
-            test(gameSettings)
-        }
-
-        fun train(gameSettings: GameSettings) {
+        /**
+         * Runs training or testing of GP/NEAT model based on configuration in [TrainingUtils].
+         */
+        fun run(gameSettings: GameSettings) {
             println("AI: ${TrainingUtils.AI}, MODE: $MODE")
 
             if (MODE == TrainingUtils.Mode.TESTING)
@@ -39,7 +37,7 @@ class TrainingUI {
                 else NeatTrainingRunner.train(gameSettings)
             }
 
-            val ai = when(TrainingUtils.AI) {
+            val ai = when (TrainingUtils.AI) {
                 TrainingUtils.TrainAI.GP -> GeneticTrainingAI(gameSettings)
                 TrainingUtils.TrainAI.GP_STRATEGY -> GeneticStrategyTrainingAI(gameSettings)
                 else -> null
@@ -49,12 +47,6 @@ class TrainingUI {
                 else GPTrainingRunner(ai).train()
             }
         }
-
-        fun test(gameSettings: GameSettings) = getTestingRunner(gameSettings,
-                GeneticTrainingAI(gameSettings)).evaluateUnitFromFile()
-
-        fun runGame(gameSettings: GameSettings) = getTestingRunner(gameSettings,
-                GeneticTrainingAI(gameSettings)).runAIFromFile()
 
         private fun getTestingRunner(gameSettings: GameSettings, ai: TrainingAI) =  TestingRunner(gameSettings) {
             g: Game, a: ActionStatistics, p: Int -> ai.calculateFitness(g, a, p)
