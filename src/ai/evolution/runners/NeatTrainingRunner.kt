@@ -1,9 +1,9 @@
 package ai.evolution.runners
 
-import ai.evolution.neat.Environment
-import ai.evolution.neat.Genome
-import ai.evolution.neat.Pool
-import ai.evolution.neat.Species
+import ai.evolution.evoneat.Environment
+import ai.evolution.evoneat.Genome
+import ai.evolution.evoneat.Pool
+import ai.evolution.evoneat.Species
 import ai.evolution.utils.BudgetUtils
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.Utils
@@ -15,12 +15,18 @@ import java.io.File
 import java.util.ArrayList
 import kotlin.system.measureNanoTime
 
-class NeatRunner(gameSettings: GameSettings) : Environment {
+/**
+ * Trains NEAT model.
+ */
+class NeatTrainingRunner(gameSettings: GameSettings) : Environment {
 
     private val gameRunner = GameRunner(gameSettings) { g: Game, a: ActionStatistics, p: Int ->
         TrainingUtils.getFitness(g, a, p, null)
     }
 
+    /**
+     * Saves best genome.
+     */
     var bestGenome: Genome? = null
     var topGenome: Genome? = null
     var topGenomeWins = 0
@@ -35,7 +41,7 @@ class NeatRunner(gameSettings: GameSettings) : Environment {
         topGenomeWins = 0
         population.chunked(TrainingUtils.CORES_COUNT).forEach { chunk ->
             chunk.parallelStream().forEach {
-                val fitnessEval = gameRunner.runGameForAIs(GameRunner.getEvaluateLambda(it), TrainingUtils.getActiveAIS(),
+                val fitnessEval = gameRunner.runGameForAIs(GameRunner.getEvaluateLambda(it), TrainingUtils.getTrainingAI(),
                         print = false, budget, runsPerAi = 1)
                 it.fitness = fitnessEval.first.toFloat()
                 it.points = fitnessEval.first.toFloat()
@@ -74,11 +80,11 @@ class NeatRunner(gameSettings: GameSettings) : Environment {
          */
         fun train(gameSettings: GameSettings) {
 
-            println(TrainingUtils.getActiveAIS() + " population = ${TrainingUtils.POPULATION}" + " units = ${TrainingUtils.HIDDEN_UNITS}")
+            println(TrainingUtils.getTrainingAI() + " population = ${TrainingUtils.POPULATION}" + " units = ${TrainingUtils.HIDDEN_UNITS}")
             val fitnessSum = mutableMapOf<Int, Float>()
 
             repeat(TrainingUtils.RUNS) {
-                val neatRunner = NeatRunner(gameSettings)
+                val neatRunner = NeatTrainingRunner(gameSettings)
                 val pool = Pool().apply { initializePool() }
                 var epochTime = 0.0
 
@@ -97,7 +103,7 @@ class NeatRunner(gameSettings: GameSettings) : Environment {
                             savePopulation(pool.species)
                         }
 
-                        if (neatRunner.topGenome != null && neatRunner.topGenomeWins >= TrainingUtils.getActiveAIS().size) {
+                        if (neatRunner.topGenome != null && neatRunner.topGenomeWins >= TrainingUtils.getTrainingAI().size) {
 
                             if (neatRunner.topGenome!!.points >= TrainingUtils.TRESHOLD_FITNESS &&
                                     (TrainingUtils.BEST_AI_EPOCH <= epoch || neatRunner.budget >= (TrainingUtils.BUDGET_UPPER_LIMIT / 2))

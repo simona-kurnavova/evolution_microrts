@@ -10,6 +10,9 @@ import ai.evolution.gpstrategy.StrategyDecisionMaker
  */
 object Crossover {
 
+    /**
+     * Number of tournament candidates.
+     */
     private const val CANDIDATE_COUNT = 2
 
     /**
@@ -28,20 +31,6 @@ object Crossover {
             // Add child and MUTATE it
             children.add(parents[0].unitDecisionMaker.crossover(parents[1].unitDecisionMaker)
                     .apply { mutate() })
-        }
-        return children
-    }
-
-    fun strategyTournament(candidatesFitnessList: MutableList<Utils.Companion.StrategyCandidate>): MutableList<StrategyDecisionMaker> {
-        val children = mutableListOf<StrategyDecisionMaker>()
-        repeat(POPULATION) {
-            val parentCandidates = candidatesFitnessList.shuffled()
-                    .take(2 * CANDIDATE_COUNT)
-                    .chunked(2)
-            val parents = mutableListOf<Utils.Companion.StrategyCandidate>()
-            parentCandidates.forEach { parents.add(it.maxByOrNull { it.fitness }!!) }
-            // Add child and mutate it
-            children.add(parents[0].strategyDecisionMaker.crossover(parents[1].strategyDecisionMaker).apply { mutate() })
         }
         return children
     }

@@ -39,7 +39,9 @@ public class MicroRTS {
             gameSettings = new GameSettings(args);
         }
 
-        System.out.println(gameSettings);
+        if (gameSettings.getLaunchMode() != GameSettings.LaunchMode.EVOLUTION) {
+            System.out.println(gameSettings);
+        }
 
         switch (gameSettings.getLaunchMode()) {
             case STANDALONE:
@@ -55,17 +57,9 @@ public class MicroRTS {
             case CLIENT:
                 startClient(gameSettings);
                 break;
-            case TRAIN:
+            case EVOLUTION:
                 TrainingUI.Companion.train(gameSettings);
                 break;
-            case TEST:
-                TrainingUI.Companion.test(gameSettings);
-                break;
-            case TRAIN_TEST:
-                TrainingUI.Companion.main(gameSettings);
-                break;
-            case RUN:
-                TrainingUI.Companion.runGame(gameSettings);
         }
     }
 

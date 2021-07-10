@@ -1,8 +1,7 @@
 package ai.evolution.utils
 
 import ai.evolution.utils.Utils.Companion.UnitCandidate
-import ai.evolution.neat.Genome
-import ai.evolution.neat.Species
+import ai.evolution.evoneat.Genome
 import ai.evolution.utils.TrainingUtils.SCALE_BEST
 
 /**
@@ -37,7 +36,7 @@ object BudgetUtils {
         val topThirdAvgFitness = candidatesFitnessList.take(third).sumByDouble { it.fitness } / third
         val topThirdAvgWins = candidatesFitnessList.take(third).sumBy { it.wins } / third
 
-        if (topThirdAvgFitness > TrainingUtils.TRESHOLD_FITNESS && topThirdAvgWins >= TrainingUtils.getActiveAIS().size) {
+        if (topThirdAvgFitness > TrainingUtils.TRESHOLD_FITNESS && topThirdAvgWins >= TrainingUtils.getTrainingAI().size) {
             Utils.writeEverywhere("// Adapted budget to ${oldBudget + TrainingUtils.BUDGET_ADAPT_CONSTANT}")
             return oldBudget + TrainingUtils.BUDGET_ADAPT_CONSTANT
         }

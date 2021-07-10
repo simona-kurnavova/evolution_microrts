@@ -42,6 +42,9 @@ class AbstractAction {
         }
     }
 
+    /**
+     * Adjusts parameters after a change in an action.
+     */
     fun onActionChangeSetup() {
         type = Type.TO_ENTITY
 
@@ -61,6 +64,9 @@ class AbstractAction {
         forceConsistency()
     }
 
+    /**
+     * Adjusts parameters to avoid non-working actions.
+     */
     fun forceConsistency() {
         when (action) {
             UnitAction.TYPE_HARVEST -> entity = Utils.Companion.Entity.RESOURCE // Harvest nearest resource
@@ -69,6 +75,9 @@ class AbstractAction {
         if (action != UnitAction.TYPE_PRODUCE) unitToProduce = null
     }
 
+    /**
+     * Builds an action based on [realState] and [unitFilter].
+     */
     private fun getEntityAction(realState: State, unitFilter: (Unit) -> Boolean, reverseDirection: Boolean = false): UnitAction {
         val toUnit = realState.getClosestEntity(realState.gs?.units?.filter { unitFilter(it) })
         if (toUnit != null) {
@@ -97,6 +106,9 @@ class AbstractAction {
         return "action=${getAction()}, entity=$entity, type=$type, unitToProd=${unitToProduce})"
     }
 
+    /**
+     * Translates actions into strings.
+     */
     private fun getAction() = when(action) {
             UnitAction.TYPE_ATTACK_LOCATION -> "Attack"
             UnitAction.TYPE_PRODUCE -> "Produce"

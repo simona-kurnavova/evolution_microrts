@@ -6,9 +6,9 @@ import ai.evolution.TrainingAI
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.TrainingUtils.MODE
 import ai.evolution.utils.TestingUtils.TEST_FILE
-import ai.evolution.runners.NeatRunner
+import ai.evolution.runners.NeatTrainingRunner
 import ai.evolution.runners.TestingRunner
-import ai.evolution.runners.TrainingRunner
+import ai.evolution.runners.GPTrainingRunner
 import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
@@ -36,7 +36,7 @@ class TrainingUI {
             if (TrainingUtils.AI == TrainingUtils.TrainAI.NEAT) {
                 if (MODE == TrainingUtils.Mode.TESTING)
                     getNeatTestingRunner(gameSettings).evaluateUnitFromFile(TEST_FILE)
-                else NeatRunner.train(gameSettings)
+                else NeatTrainingRunner.train(gameSettings)
             }
 
             val ai = when(TrainingUtils.AI) {
@@ -46,7 +46,7 @@ class TrainingUI {
             }
             if (ai != null) {
                 if (MODE == TrainingUtils.Mode.TESTING) getTestingRunner(gameSettings, ai).evaluateUnitFromFile(TEST_FILE)
-                else TrainingRunner(ai).train()
+                else GPTrainingRunner(ai).train()
             }
         }
 

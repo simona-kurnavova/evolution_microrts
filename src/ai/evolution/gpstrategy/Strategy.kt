@@ -7,17 +7,24 @@ import ai.evolution.state.AbstractAction
 import rts.UnitAction.TYPE_PRODUCE
 import rts.units.UnitTypeTable
 
+/**
+ * Defines strategy of all units (shared).
+ */
 class Strategy {
 
+    /**
+     * Ordered list of actions.
+     */
     private val actionPriorityList = mutableListOf<Int>()
 
     /**
-     * Names of the unit types to produce.
+     * Names of the unit types to produce (ordered).
      */
     private val producePriorityList = mutableListOf<String>()
 
-    //private val attackPriorityList
-
+    /**
+     * Initiate at random - shuffle both of the lists.
+     */
     init {
         actionPriorityList.addAll(actions.shuffled())
         val utt = UnitTypeTable(UTT_VERSION)
@@ -26,6 +33,9 @@ class Strategy {
         }
     }
 
+    /**
+     * Mutate Strategy. Either switch two elements of [actionPriorityList] or [producePriorityList].
+     */
     fun mutate() {
         if (coinToss())
             switchRandomTwo(actionPriorityList)
@@ -34,6 +44,9 @@ class Strategy {
             switchRandomTwo(producePriorityList)
     }
 
+    /**
+     * Switches two elements of the [list].
+     */
     private fun <T> switchRandomTwo(list: MutableList<T>) {
         val index1: Int = (0 until list.size).random()
         val index2: Int = (0 until list.size).random()
@@ -45,6 +58,9 @@ class Strategy {
         }
     }
 
+    /**
+     * Returns the value of the action (how important it is to perform the action based on the ordered list).
+     */
     fun evaluateAction(abstractAction: AbstractAction): Int {
         val index = actionPriorityList.indexOf(abstractAction.action) + 1
         if (abstractAction.action == TYPE_PRODUCE) {

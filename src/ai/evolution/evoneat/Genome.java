@@ -1,4 +1,4 @@
-package ai.evolution.neat;
+package ai.evolution.evoneat;
 
 import javax.management.RuntimeErrorException;
 import java.io.BufferedWriter;

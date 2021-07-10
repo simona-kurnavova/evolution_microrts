@@ -10,12 +10,11 @@ import ai.evolution.state.AbstractAction.Companion.types
 import ai.evolution.state.State
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.TrainingUtils.BUDGET_INITIAL
-import ai.evolution.utils.TrainingUtils.MODE
 import ai.evolution.utils.TestingUtils.TESTING_BUDGET
 import ai.evolution.utils.TestingUtils.TESTING_RUNS
 import ai.evolution.utils.TrainingUtils.UTT_VERSION
 import ai.evolution.gp.UnitDecisionMaker
-import ai.evolution.neat.Genome
+import ai.evolution.evoneat.Genome
 import ai.evolution.gpstrategy.GlobalState
 import ai.evolution.utils.Utils
 import rts.ActionStatistics
@@ -24,6 +23,9 @@ import rts.GameSettings
 import rts.UnitAction.*
 import rts.units.UnitTypeTable
 
+/**
+ * Runs simulations of the game during training, testing or tournament.
+ */
 class GameRunner(val gameSettings: GameSettings,
                  val fitness: (Game, ActionStatistics, Int) -> Pair<Double, Boolean>) {
 
@@ -98,8 +100,7 @@ class GameRunner(val gameSettings: GameSettings,
             try {
                 game.start()
             } catch (e: Exception) {
-                Utils.writeEverywhere("error: ${e.cause} from playTransparentGame()")
-                Utils.writeEverywhere("error: ${e.printStackTrace()}")
+                // Do nothing
             }
         }
     }
@@ -107,15 +108,9 @@ class GameRunner(val gameSettings: GameSettings,
     private fun playGame(utt: UnitTypeTable, player: Int, ai1: AI, ai2: AI): Pair<Double, Boolean>?  {
         val game = getGame(utt, player, ai1, ai2)
         try {
-            val fitness = fitness(game, game.start()[player], player)
-            if (ai1 is EvolutionAI && MODE == TrainingUtils.Mode.TESTING) {
-                //println("Average time of getAction() call is ${ai1.getAverageActionTime()} ns / " +
-                //    "${ai1.getAverageActionTime() / 1000000} ms")
-            }
-            return fitness
+            return fitness(game, game.start()[player], player)
         } catch (e: Exception) {
-            Utils.writeEverywhere("error: ${e.cause} from playGame()")
-            Utils.writeEverywhere("error: ${e.printStackTrace()}")
+            // Do nothing
         }
         return null
     }

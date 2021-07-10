@@ -1,4 +1,4 @@
-package ai.evolution.neat;
+package ai.evolution.evoneat;
 
 /**
  * Created by vishnu on 7/1/17.

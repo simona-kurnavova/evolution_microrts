@@ -17,6 +17,9 @@ import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
 
+/**
+ * Defines training (and genetic operators) of a simple genetic programming model.
+ */
 abstract class TrainingAI(val gameSettings: GameSettings) {
 
     var bestCandidate: UnitCandidate? = null
@@ -37,6 +40,9 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
 
     abstract fun getTrainingAIs(epoch: Int): List<String>
 
+    /**
+     * Evaluates fitness of all [candidates] and sort them.
+     */
     fun evaluateFitness(candidates: MutableList<UnitDecisionMaker>, epoch: Int, children: Boolean = false, budget: Int = BUDGET_INITIAL): MutableList<Utils.Companion.UnitCandidate> {
         val evaluatedCandidates = mutableListOf<UnitCandidate>()
         val ais = getTrainingAIs(epoch)
@@ -88,7 +94,7 @@ abstract class TrainingAI(val gameSettings: GameSettings) {
      */
     fun saveBestIfFound(candidatesFitnessList: MutableList<UnitCandidate>): Boolean {
         val best = bestCandidate ?: candidatesFitnessList[0]
-        if (best.wins >= TrainingUtils.getActiveAIS().size && best.fitness >= TRESHOLD_FITNESS) {
+        if (best.wins >= TrainingUtils.getTrainingAI().size && best.fitness >= TRESHOLD_FITNESS) {
             Utils.writeToFile("Found best unit of Fitness: " + "${best.fitness}")
 
             // Save best unit to file

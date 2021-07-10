@@ -2,8 +2,8 @@ package ai.evolution
 
 import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.utils.TrainingUtils.ACTIVE_START
-import ai.evolution.utils.TrainingUtils.getActiveAIS
-import ai.evolution.utils.TrainingUtils.getPassiveAIS
+import ai.evolution.utils.TrainingUtils.getTrainingAI
+import ai.evolution.utils.TrainingUtils.getPreTrainingAI
 import ai.evolution.utils.Utils.Companion.UnitCandidate
 import ai.evolution.operators.Crossover
 import ai.evolution.operators.Fitness
@@ -13,6 +13,9 @@ import rts.ActionStatistics
 import rts.Game
 import rts.GameSettings
 
+/**
+ * Specifies training of simple gentic programming model.
+ */
 open class GeneticTrainingAI(gameSettings: GameSettings) : TrainingAI(gameSettings) {
 
     init {
@@ -33,5 +36,5 @@ open class GeneticTrainingAI(gameSettings: GameSettings) : TrainingAI(gameSettin
             Selection.selectBestPopulation(candidatesFitnessList, childrenFitnessList)
 
     override fun getTrainingAIs(epoch: Int): List<String> =
-            if (epoch < ACTIVE_START) getPassiveAIS() else getActiveAIS()
+            if (epoch < ACTIVE_START) getPreTrainingAI() else getTrainingAI()
 }

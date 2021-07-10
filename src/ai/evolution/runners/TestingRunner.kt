@@ -6,14 +6,14 @@ import ai.evolution.state.State
 import ai.evolution.gp.UnitDecisionMaker
 import ai.evolution.utils.TrainingUtils
 import ai.evolution.utils.TrainingUtils.AI
-import ai.evolution.neat.Genome
+import ai.evolution.evoneat.Genome
 import ai.evolution.gpstrategy.GlobalState
 import ai.evolution.utils.TestingUtils
 import ai.evolution.utils.TestingUtils.TESTING_POP_BUDGET
 import ai.evolution.utils.TestingUtils.TESTING_POP_RUNS
 import ai.evolution.utils.TestingUtils.getFastTestingAIs
 import ai.evolution.utils.TestingUtils.getTestingAIs
-import ai.evolution.utils.TrainingUtils.getActiveAIS
+import ai.evolution.utils.TrainingUtils.getTrainingAI
 import com.google.gson.Gson
 import rts.ActionStatistics
 import rts.Game
@@ -21,6 +21,9 @@ import rts.GameSettings
 import java.io.File
 import kotlin.math.abs
 
+/**
+ * Runs test simulations.
+ */
 class TestingRunner(gameSettings: GameSettings,
                     val fitness: (Game, ActionStatistics, Int) -> Pair<Double, Boolean>) {
 
@@ -40,19 +43,10 @@ class TestingRunner(gameSettings: GameSettings,
 
         println("Player 1 AVG fitness: ${fitnesses.sumByDouble { it?.first ?: 0.0 } / fitnesses.size}")
         println("Wins: ${fitnesses.count { it != null && it.second }}")
-
-        fitnesses.clear()
-        repeat(TestingUtils.TESTING_RUNS) {
-            player = abs(player - 1)
-            fitnesses.add(gameRunner.runTournament(ai2, ai1))
-        }
-
-        println("Player 2 AVG fitness: ${fitnesses.sumByDouble { it?.first ?: 0.0 } / fitnesses.size}")
-        println("Wins: ${fitnesses.count { it != null && it.second }}")
     }
 
     /**
-     * Parses unit from specified file and evaluates it.
+     * Parses unit from specified [file] and evaluates it.
      */
     fun evaluateUnitFromFile(file: File = conditionsFile) {
         // Run tests
@@ -84,10 +78,6 @@ class TestingRunner(gameSettings: GameSettings,
     fun testAI(decider: (State, GlobalState) -> List<AbstractAction>) {
         val ais = getTestingAIs()
         gameRunner.runGameForAIs(decider, ais, true)
-    }
-
-    fun gatherTestingData() {
-        gameRunner.playTransparentGame(getActiveAIS()[0], getTestingAIs()[0], 10)
     }
 
     private fun fastTestAI(decider: (State, GlobalState) -> List<AbstractAction>): Int =

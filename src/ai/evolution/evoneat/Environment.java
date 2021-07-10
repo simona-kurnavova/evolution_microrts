@@ -1,4 +1,4 @@
-package ai.evolution.neat;
+package ai.evolution.evoneat;
 
 import java.util.ArrayList;
 

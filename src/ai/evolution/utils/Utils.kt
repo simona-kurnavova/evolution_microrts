@@ -1,7 +1,7 @@
 package ai.evolution.utils
 
 import ai.evolution.gp.UnitDecisionMaker
-import ai.evolution.neat.NEAT_Config.*
+import ai.evolution.evoneat.NEAT_Config.*
 import ai.evolution.gpstrategy.StrategyDecisionMaker
 import rts.UnitAction
 import rts.units.Unit
@@ -19,7 +19,7 @@ class Utils {
          * Root folder for this run output files.
          */
         val ROOT_OUTPUT_FOLDER =
-                "output/${TrainingUtils.AI.name}_${TrainingUtils.POPULATION}_map=${TrainingUtils.MAP_WIDTH}_${TrainingUtils.getActiveAIS()}" +
+                "output/${TrainingUtils.AI.name}_${TrainingUtils.POPULATION}_map=${TrainingUtils.MAP_WIDTH}_${TrainingUtils.getTrainingAI()}" +
                         "_fit=${TrainingUtils.FITNESS.name}_b=${TrainingUtils.BUDGET_INITIAL}" +
                         (if (TrainingUtils.BUDGET_ADAPT_CONSTANT != 0) "_step=${TrainingUtils.BUDGET_ADAPT_CONSTANT}_per=${TrainingUtils.BUDGET_EPOCH_STEP}e" else "") +
                         if (TrainingUtils.AI == TrainingUtils.TrainAI.NEAT)
@@ -53,7 +53,7 @@ class Utils {
         val popListFile = File("$ROOT_OUTPUT_FOLDER/population_list")
 
         @JvmStatic
-        val dataFile = File("$ROOT_OUTPUT_FOLDER/DATA_${TrainingUtils.getActiveAIS()}_${TestingUtils.getTestingAIs()}")
+        val dataFile = File("$ROOT_OUTPUT_FOLDER/DATA_${TrainingUtils.getTrainingAI()}_${TestingUtils.getTestingAIs()}")
 
         val directions = listOf(
                 UnitAction.DIRECTION_NONE, UnitAction.DIRECTION_RIGHT, UnitAction.DIRECTION_LEFT, UnitAction.DIRECTION_UP, UnitAction.DIRECTION_DOWN
@@ -128,10 +128,6 @@ class Utils {
         class UnitCandidate(var unitDecisionMaker: UnitDecisionMaker,
                             var fitness: Double, var wins: Int)
 
-        data class StrategyCandidate(var strategyDecisionMaker: StrategyDecisionMaker,
-                                     var fitness: Double, var wins: Int)
-
         data class PlayerStatistics(val id: Int, val units: List<Unit?>?, val hp: Int, val hpBase: Int)
     }
-
 }

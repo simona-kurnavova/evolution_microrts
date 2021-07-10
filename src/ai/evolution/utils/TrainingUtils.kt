@@ -5,6 +5,9 @@ import rts.ActionStatistics
 import rts.Game
 import java.io.File
 
+/**
+ * Configuration of the training and utils.
+ */
 object TrainingUtils {
     enum class TrainAI {
         GP, GP_STRATEGY, NEAT
@@ -25,31 +28,33 @@ object TrainingUtils {
     val AI = TrainAI.NEAT // Model to train with
     val FITNESS = FitnessType.BASIC // Fitness for evaluation of the candidates
 
-    const val RUNS = 1
+    const val RUNS = 1 // How many times should algorithm run
     const val EPOCH_COUNT = 10 // Number of generations
-    const val POPULATION = 100
+    const val POPULATION = 10 // Number of individuals in population
     const val MAP_WIDTH = 16 // Size of the map
 
     /**
      * Genetic programming model settings only.
      */
-    const val BEST_AI_EPOCH = 15000 // Minimum number of epochs, after which can training stop after finding the best candidate
+    const val BEST_AI_EPOCH = 500 // Minimum number of epochs, after which can training stop after finding the best candidate
     const val CONDITION_COUNT = 10 // Number of conditions per one unit
     const val COND_MUT_PROB = 0.14 // Probability of mutation
     const val PROB_BASE_ATTACK = 0.25 // Probability of base attack
-    const val ACTIVE_START = 0 // In case of passive learning, otherwise 0
 
     /**
      * Neat settings only.
      */
-    const val HIDDEN_UNITS = 10000 // Number of hidden units of networks
+    const val HIDDEN_UNITS = 1000 // Number of hidden units of networks
 
     /**
      * Adaptive budget settings.
+     * 1) If [ADAPTIVE_BUDGET] is false and [BUDGET_EPOCH_STEP] is 0, [BUDGET_INITIAL] is used as fixed budget size.
+     * 2) If [ADAPTIVE_BUDGET] is false and [BUDGET_EPOCH_STEP] is non-zero, algorithm will adapt budget by [BUDGET_ADAPT_CONSTANT] every [BUDGET_EPOCH_STEP] epoch.
+     * 3) If [ADAPTIVE_BUDGET] is true, algorithm adapts budget everytime fitness reaches [TRESHOLD_FITNESS] by [BUDGET_ADAPT_CONSTANT].
      */
     const val ADAPTIVE_BUDGET = false
     const val TRESHOLD_FITNESS = 700 // Adapt when this fitness value is reached
-    const val BUDGET_INITIAL = 10
+    const val BUDGET_INITIAL = 5
     const val BUDGET_ADAPT_CONSTANT = 5 // Adapt fitness by adding this number
     const val BUDGET_EPOCH_STEP = 0 // Adapt fitness after this number of epochs
     const val BUDGET_UPPER_LIMIT = 100 // Stop when this fitness is reached and trained
@@ -61,10 +66,10 @@ object TrainingUtils {
      * True if using population from file as initial population.
      */
     const val LOAD_FROM_FILE = false
-    val LOAD_POPULATION_FILE = File("replace this")
+    val LOAD_POPULATION_FILE = File("replace this with population file")
 
     /**
-     * Testing during training for better accuracy.
+     * Testing during training for better accuracy (but significantly prolonged time).
      */
     const val TESTING_WHILE_TRAINING = false
     const val TESTING_INTERVAL = 10 // every X epochs
@@ -80,37 +85,37 @@ object TrainingUtils {
     }
 
     /**
-     * Used during pre-training only, if [ACTIVE_START] is 0, it is not used at all.
+     * Returns AI opponents for model to train against.
      */
-    fun getPassiveAIS(): List<String> = mutableListOf(
+    fun getTrainingAI(): List<String> = mutableListOf(
             "ai.RandomBiasedAI",
-            "ai.mcts.informedmcts.InformedNaiveMCTS",
+            "ai.RandomBiasedAI",
     )
 
     /**
-     * Returns AI opponents for model to train against.
+     * Used during pre-training only, if [ACTIVE_START] is 0, it is not used at all.
      */
-    fun getActiveAIS(): List<String> = mutableListOf(
-            //"ai.minimax.RTMiniMax.IDRTMinimax",
-            //"ai.minimax.RTMiniMax.IDRTMinimax",
-            //"ai.mcts.naivemcts.NaiveMCTS",
-            //"ai.mcts.naivemcts.NaiveMCTS",
+    const val ACTIVE_START = 0
+
+    fun getPreTrainingAI(): List<String> = mutableListOf(
+            "ai.RandomBiasedAI",
             "ai.mcts.informedmcts.InformedNaiveMCTS",
-            "ai.mcts.informedmcts.InformedNaiveMCTS",
-            //"ai.RandomBiasedAI",
-            //"ai.RandomBiasedAI",
     )
 
     fun printInfo(): String = "pop: $POPULATION, conditions: $CONDITION_COUNT, " +
             "epochs: $BEST_AI_EPOCH, mut: $COND_MUT_PROB, turns: $MAX_CYCLES, active_start: $ACTIVE_START"
 
-    const val CORES_COUNT = 8 // number of processor cores/threads for parallelization
+    const val SAVE_POPULATION_INTERVAL = 10 // Save whole population to file each interval
+    const val CORES_COUNT = 8 // Number of processor cores/threads for parallelization
+    const val BEST_LIST_SIZE = 10 // Number of best individuals to save periodically
+
+    /**
+     * MicroRTS configuration.
+     */
     const val HEADLESS = true
     const val PARTIALLY_OBSERVABLE = false
     const val MAX_CYCLES = 5000
     const val UPDATE_INTERVAL = 5 // ignored if headless == true
-    const val SAVE_POPULATION_INTERVAL = 10
     const val UTT_VERSION = 2
     const val MAP_LOCATION = "data/maps/${MAP_WIDTH}x${MAP_WIDTH}/basesWorkers${MAP_WIDTH}x${MAP_WIDTH}.xml"
-    const val BEST_LIST_SIZE = 10
 }

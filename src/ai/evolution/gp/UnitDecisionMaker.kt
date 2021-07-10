@@ -9,16 +9,17 @@ import ai.evolution.utils.Utils
 import com.google.gson.Gson
 
 /**
- * Decision maker for unit. Contain list of conditions based on which decides the best action for unit to take.
+ * Decision maker for one unit.
+ * Contains list of conditions based on which decides the best action for unit to take.
  */
-class UnitDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
+class UnitDecisionMaker(conditionCount: Int = 0) {
 
     val conditions = mutableListOf<Condition>()
 
-    var strategyDecisionMaker: StrategyDecisionMaker? = null
+    var strategyDecisionMaker: StrategyDecisionMaker? = null // used only when training with strategy
 
     /**
-     * Random init of the given number of conditions at the beginning of the trainning.
+     * Random init of the given number of conditions at the beginning of the training.
      */
     init {
         repeat(conditionCount) { conditions.add(Condition()) }
@@ -27,7 +28,7 @@ class UnitDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
     /**
      * Mutates list of conditions. Each condition has [COND_MUT_PROB] that it is going to be mutated.
      */
-    override fun mutate() {
+    fun mutate() {
         conditions.forEach { if (Utils.coinToss(TrainingUtils.COND_MUT_PROB)) it.mutate() }
         strategyDecisionMaker?.mutate()
     }
@@ -42,7 +43,7 @@ class UnitDecisionMaker(conditionCount: Int = 0): DecisionMaker() {
             child.addCondition(listOf(conditions[i], decisionMaker.conditions[i]).random())
         }
 
-        // For strategy AI only, nulls otherwise
+        // For strategy AI only, null otherwise
         child.strategyDecisionMaker = strategyDecisionMaker?.crossover(decisionMaker.strategyDecisionMaker!!)
         return child
     }

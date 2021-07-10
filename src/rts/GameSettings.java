@@ -30,11 +30,7 @@ public class GameSettings {
         GUI,
         SERVER,
         CLIENT,
-        TRAIN_TEST,
-        TEST,
-        TRAIN,
-        RUN,
-        TRAIN_NEAT
+        EVOLUTION
     }
 
     // Networking

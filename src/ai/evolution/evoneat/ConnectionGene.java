@@ -1,4 +1,4 @@
-package ai.evolution.neat;
+package ai.evolution.evoneat;
 
 /**
  * ConnectionGene Represents the connection(Axon) of the neuron
@@ -61,13 +61,6 @@ public class ConnectionGene {
 
     @Override
     public String toString() {
-/*        return "ConnectionGene{" +
-                "into=" + into +
-                ", out=" + out +
-                ", innovation=" + innovation +
-                ", weight=" + weight +
-                ", enabled=" + enabled +
-                '}';*/
         return into+","+out+","+weight+","+enabled;
     }
 }
