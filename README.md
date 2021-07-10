@@ -3,11 +3,11 @@
 This is an implementation of two RTS game AI models using the MicroRTS framework written by microRTS
 (see [Github repository](https://github.com/santiontanon/microrts) or [oficial MicroRTS website](https://sites.google.com/site/micrortsaicompetition/home)) 
 
-Models: 
+Models (located in *src/ai/evolution/*): 
 - Genetic programming model
 - NEAT model (implementation is based on [evo-NEAT](https://github.com/vishnugh/evo-NEAT))
 
-###Training of the model
+### Training of the model
 Setup in src/ai/evolution/utils/*TrainingUtils*:
 
 Setup training mode by:
@@ -22,41 +22,41 @@ val AI = TrainAI.GP // for GP model
 val AI = TrainAI.GP_STRATEGY // for GP model with strategy AI on top
 ```
 
-Setup training parameters and choose AI(s) to train against:
+Setup training parameters and choose AI(s) to train against (each AI is run only once):
 ```kotlin
 const val EPOCH_COUNT = 10 // Number of generations
 const val POPULATION = 100 // Size of a population
 val FITNESS = FitnessType.BASIC // type of fitness to use for evaluation
 
-// ... See TrainingUtils for more parameters with their description
+// ... See TrainingUtils for more parameters with descriptions
 
-fun getActiveAIS(): List<String> = mutableListOf(
+fun getTrainingAI(): List<String> = mutableListOf(
     "ai.RandomBiasedAI",
-    "ai.mcts.informedmcts.InformedNaiveMCTS"
+    "ai.RandomBiasedAI",
 )
 ```
 
-for GP model only:
+For GP model only:
 ```kotlin
 const val CONDITION_COUNT = 10 // number of conditions per individual
 const val COND_MUT_PROB = 0.14 // probability of mutation
 ...
 ```
 
-for GP with Strategy in utils/StrategyTrainingUtils:
+For GP with Strategy in utils/StrategyTrainingUtils:
 ```kotlin
 const val CONDITION_COUNT = 10 // number of strategy conditions additionaly to regular ones
 ```
 
-for NEAT model only:
+For NEAT model only:
 ```kotlin
 const val HIDDEN_UNITS = 100000 // number of hidden units of networks
 ```
 **Note**: you can also change mutation probabilities and other parameters of NEAT directly in src/ai/evolution/neat/NEAT_config
 
-Run MicroRTS with "TRAIN" value in resources/config.properties file
+Run MicroRTS with "EVOLUTION" value in resources/config.properties file:
 ```kotlin
-launch_mode=TRAIN
+launch_mode=EVOLUTION
 ```
 Once the training is finished, 
 the population, training progress and best candidate 
@@ -65,7 +65,7 @@ solution will be stored in the folder:
 val ROOT_OUTPUT_FOLDER = "output/${TrainingUtils.AI.name}_${TrainingUtils.POPULATION}_map=${TrainingUtils.MAP_WIDTH}_${TrainingUtils.getActiveAIS()}" // + other specific parameters for the model run
 ```
 
-###Testing
+### Testing
 After training, you can test your model.
 
 in *TrainingUtils*, setup variables:
@@ -79,7 +79,7 @@ and in TestingUtils setup:
  val TEST_FILE = File("name of the file with saved model")
 ```
 
-Choose AIs to test about, their budget size and number of runs (for each AI:
+Choose AIs to test against, their budget size and number of runs for each AI:
 ```kotlin
 fun getTestingAIs(): MutableList<String> = mutableListOf(
             "ai.RandomBiasedAI",
@@ -90,7 +90,7 @@ const val TESTING_BUDGET = 100
 ```
 Run the same way as training.
 
-###Tournament
+### Tournament
 Tournament testing allows to play games of two trained models that are both loaded from file.
 
 in *TrainingUtils*, setup variables:
