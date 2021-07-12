@@ -25,13 +25,12 @@ object TrainingUtils {
      * Global settings. Applies to all of the models.
      */
     val MODE = Mode.TRAINING // Mode of the run
-    val AI = TrainAI.GP_STRATEGY // Model to train with
+    val AI = TrainAI.GP // Model to train with
     val FITNESS = FitnessType.BASIC // Fitness for evaluation of the candidates
 
     const val RUNS = 1 // How many times should algorithm run
-    const val EPOCH_COUNT = 10 // Number of generations
+    const val EPOCH_COUNT = 500 // Number of generations
     const val POPULATION = 10 // Number of individuals in population
-    const val MAP_WIDTH = 16 // Size of the map
 
     /**
      * Genetic programming model settings only.
@@ -117,5 +116,6 @@ object TrainingUtils {
     const val MAX_CYCLES = 5000
     const val UPDATE_INTERVAL = 5 // ignored if headless == true
     const val UTT_VERSION = 2
+    const val MAP_WIDTH = 16 // Size of the map
     const val MAP_LOCATION = "data/maps/${MAP_WIDTH}x${MAP_WIDTH}/basesWorkers${MAP_WIDTH}x${MAP_WIDTH}.xml"
 }

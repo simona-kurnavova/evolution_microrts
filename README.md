@@ -54,7 +54,7 @@ const val HIDDEN_UNITS = 100000 // number of hidden units of networks
 ```
 **Note**: you can also change mutation probabilities and other parameters of NEAT directly in src/ai/evolution/neat/NEAT_config
 
-Add "EVOLUTION" value in resources/config.properties file and run application from MicroRTS class:
+Add "EVOLUTION" value in resources/config.properties file and run application from MicroRTS class using gradle:
 ```kotlin
 launch_mode=EVOLUTION
 ```
@@ -121,3 +121,4 @@ Run the same way as training.
 - Changes in MicroRTS class in order to run TrainingUI (adding option of "EVOLUTION")
 - Adding an option to setup computational budget of AIs during creation of an instance
 - Moving setting of basic MicroRTS parameters into TrainingUtils
+- Added gradle and uberjar build option
