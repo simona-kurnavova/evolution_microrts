@@ -25,8 +25,8 @@ object TrainingUtils {
      * Global settings. Applies to all of the models.
      */
     val MODE = Mode.TESTING // Mode of the run
-    val AI = TrainAI.GP_STRATEGY // Model to train with
-    val FITNESS = FitnessType.AGGRESSIVE // Fitness for evaluation of the candidates
+    val AI = TrainAI.NEAT // Model to train with
+    val FITNESS = FitnessType.BASIC // Fitness for evaluation of the candidates
 
     const val RUNS = 1 // How many times should algorithm run
     const val EPOCH_COUNT = 10 // Number of generations
@@ -44,7 +44,7 @@ object TrainingUtils {
     /**
      * Neat settings only.
      */
-    const val HIDDEN_UNITS = 1000 // Number of hidden units of networks
+    const val HIDDEN_UNITS = 10000 // Number of hidden units of networks
 
     /**
      * Adaptive budget settings.

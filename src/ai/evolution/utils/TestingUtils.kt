@@ -10,11 +10,17 @@ object TestingUtils {
     /**
      * Testing values. When [TrainingUtils.MODE] is [TrainingUtils.Mode.TESTING].
      */
-    val TEST_FILE = File(
-            "/population_list")
+    val TEST_FILE = File("Location of AI file to test")
+
+    /**
+     * Test params.
+     */
     const val TESTING_RUNS = 100
     const val TESTING_BUDGET = 100
 
+    /**
+     * Test params for testing [TEST_FILE] with more than one individual. The best is then tested normally.
+     */
     const val TESTING_POP_RUNS = 10
     const val TESTING_POP_BUDGET = 100
 
@@ -34,6 +40,11 @@ object TestingUtils {
             "ai.mcts.naivemcts.NaiveMCTS",
     )
 
+    /**
+     * Used for testing the whole generation (test file with more than 1 individual),
+     * usually with lower number of runs. The best AI from these testing is then
+     * tested using testing AIs.
+     */
     fun getFastTestingAIs(): MutableList<String> = mutableListOf(
             "ai.RandomAI",
             "ai.RandomBiasedAI",

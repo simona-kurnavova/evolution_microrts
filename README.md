@@ -113,3 +113,11 @@ const val TESTING_RUNS = 100
 ```
 
 Run the same way as training.
+
+### MicroRTS notes
+
+**Changes in MicroRTS framework to better suite the needs of these models**:
+- Add of statistics during game play in order to gather data for fitness evaluation
+- Changes in MicroRTS class in order to run TrainingUI (adding option of "EVOLUTION")
+- Adding an option to setup computational budget of AIs during creation of an instance
+- Moving setting of basic MicroRTS parameters into TrainingUtils
