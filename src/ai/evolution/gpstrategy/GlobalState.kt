@@ -77,8 +77,9 @@ open class GlobalState(val player: Int? = null, val gs: GameState? = null) {
      * @return value -1, 0, 1
      */
     private fun getRatioValue(ratio: Double): Int {
-        return if (ratio + TOLERANCE > 0 && ratio - TOLERANCE < 0) 0
-        else if(ratio > 0) return 1
+        val adjustedRatio = ratio - 1
+        return if (adjustedRatio + TOLERANCE > 0 && adjustedRatio - TOLERANCE < 0) 0
+        else if(adjustedRatio > 0) return 1
         else return -1
     }
 

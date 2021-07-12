@@ -24,8 +24,8 @@ object TrainingUtils {
     /**
      * Global settings. Applies to all of the models.
      */
-    val MODE = Mode.TESTING // Mode of the run
-    val AI = TrainAI.NEAT // Model to train with
+    val MODE = Mode.TRAINING // Mode of the run
+    val AI = TrainAI.GP_STRATEGY // Model to train with
     val FITNESS = FitnessType.BASIC // Fitness for evaluation of the candidates
 
     const val RUNS = 1 // How many times should algorithm run
