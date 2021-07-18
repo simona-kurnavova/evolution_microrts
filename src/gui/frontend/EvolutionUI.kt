@@ -24,7 +24,7 @@ class EvolutionUI {
             println("AI: ${TrainingUtils.AI}, MODE: $MODE")
 
             if (MODE == TrainingUtils.Mode.TESTING)
-                println("File: ${TEST_FILE}")
+                println("File: $TEST_FILE")
 
             if (MODE == TrainingUtils.Mode.TOURNAMENT_TESTING) {
                 getNeatTestingRunner(gameSettings).evaluateByTournament()

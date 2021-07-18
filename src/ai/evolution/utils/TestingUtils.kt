@@ -10,7 +10,7 @@ object TestingUtils {
     /**
      * Testing values. When [TrainingUtils.MODE] is [TrainingUtils.Mode.TESTING].
      */
-    val TEST_FILE = File("Location of AI file to test")
+    val TEST_FILE = File("output/GP_10_map=16_[ai.RandomBiasedAI, ai.RandomBiasedAI]_fit=BASIC_b=5_step=5_per=0e_cond=5_mut=0.14_as=0_em=500_e=200/population_list")
 
     /**
      * Test params.
@@ -21,7 +21,7 @@ object TestingUtils {
     /**
      * Test params for testing [TEST_FILE] with more than one individual. The best is then tested normally.
      */
-    const val TESTING_POP_RUNS = 10
+    const val TESTING_POP_RUNS = 100
     const val TESTING_POP_BUDGET = 100
 
     /**
@@ -46,10 +46,10 @@ object TestingUtils {
      * tested using testing AIs.
      */
     fun getFastTestingAIs(): MutableList<String> = mutableListOf(
-            "ai.RandomAI",
+            //"ai.RandomAI",
             "ai.RandomBiasedAI",
-            "ai.mcts.naivemcts.NaiveMCTS",
-            "ai.mcts.informedmcts.InformedNaiveMCTS",
-            "ai.minimax.RTMiniMax.IDRTMinimax",
+            //"ai.mcts.naivemcts.NaiveMCTS",
+            //"ai.mcts.informedmcts.InformedNaiveMCTS",
+            //"ai.minimax.RTMiniMax.IDRTMinimax",
     )
 }

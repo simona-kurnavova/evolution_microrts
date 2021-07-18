@@ -117,8 +117,15 @@ Run the same way as training.
 ### MicroRTS notes
 
 **Changes in MicroRTS framework to better suite the needs of these models**:
-- Add of statistics during game play in order to gather data for fitness evaluation
+- Addition of statistics during game play in order to gather data for fitness evaluation
 - Changes in MicroRTS class in order to run TrainingUI (adding option of "EVOLUTION")
 - Adding an option to setup computational budget of AIs during creation of an instance
 - Moving setting of basic MicroRTS parameters into TrainingUtils
 - Added gradle and uberjar build option
+
+### evo-NEAT notes
+Location: src/evolution/evoneat
+
+**Changes in evo-NEAT model**:
+- removal of unused classes/packages for our purposes
+- Changing of parameter values in NEAT_Config file

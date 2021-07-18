@@ -13,3 +13,4 @@ output
 /build/
 /output/
 gradle/wrapper/gradle-wrapper.jar
+*.DS_Store

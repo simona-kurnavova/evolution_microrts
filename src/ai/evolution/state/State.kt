@@ -135,8 +135,11 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
                   strategy: Strategy? = null): Double {
         var result = 0
 
-        if (unit?.type?.name == null || partialState.unitType == unit.type?.name)
+        //if (unit?.type?.name == null || partialState.unitType == unit.type?.name)
+        //    result++
+        if (unit?.type?.name != null && partialState.unitType == unit.type?.name)
             result++
+
 
         partialState.parameters.keys.forEach {
             if (parameters[it] == partialState.parameters[it])
@@ -157,7 +160,9 @@ open class State(val player: Int? = null, val gs: GameState? = null, val unit: U
                     strategy.evaluateAction(abstractAction)
         }
 
-        return result.toDouble() / partialState.parameters.size
+        val count = if (unit?.type?.name != null) partialState.parameters.size + 1 else partialState.parameters.size
+        if (result == 0) return 0.0
+        return result.toDouble() / count.toDouble()
     }
 
     fun isEnemy(unit: Unit) = unit.player != player && unit.player != -1

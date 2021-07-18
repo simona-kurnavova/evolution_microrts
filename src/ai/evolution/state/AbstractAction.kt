@@ -24,6 +24,11 @@ class AbstractAction {
         onActionChangeSetup()
     }
 
+    fun mutate() {
+        action = Utils.actions.random()
+        onActionChangeSetup()
+    }
+
     /**
      * Creates instance of UnitAction according to relative state of a game and unit.
      * @param realState State of the game
@@ -43,28 +48,6 @@ class AbstractAction {
     }
 
     /**
-     * Adjusts parameters after a change in an action.
-     */
-    fun onActionChangeSetup() {
-        type = Type.TO_ENTITY
-
-        when (action) {
-            UnitAction.TYPE_PRODUCE -> {
-                unitToProduce = UnitTypeTable(TrainingUtils.UTT_VERSION).unitTypes.random().name
-            }
-            UnitAction.TYPE_ATTACK_LOCATION -> {
-                entity = if (Utils.coinToss(TrainingUtils.PROB_BASE_ATTACK))
-                Utils.Companion.Entity.ENEMY_BASE else Utils.Companion.Entity.ENEMY
-            }
-            UnitAction.TYPE_MOVE -> {
-                entity = if (entity != null) entity else Utils.entities.random()
-                type = types.random()
-            }
-        }
-        forceConsistency()
-    }
-
-    /**
      * Adjusts parameters to avoid non-working actions.
      */
     fun forceConsistency() {
@@ -73,6 +56,28 @@ class AbstractAction {
             UnitAction.TYPE_RETURN -> entity = Utils.Companion.Entity.MY_BASE
         }
         if (action != UnitAction.TYPE_PRODUCE) unitToProduce = null
+    }
+
+    /**
+     * Adjusts parameters after a change in an action.
+     */
+    private fun onActionChangeSetup() {
+        type = Type.TO_ENTITY
+
+        when (action) {
+            UnitAction.TYPE_PRODUCE -> {
+                unitToProduce = UnitTypeTable(TrainingUtils.UTT_VERSION).unitTypes.random().name
+            }
+            UnitAction.TYPE_ATTACK_LOCATION -> {
+                entity = if (Utils.coinToss(TrainingUtils.PROB_BASE_ATTACK))
+                    Utils.Companion.Entity.ENEMY_BASE else Utils.Companion.Entity.ENEMY
+            }
+            UnitAction.TYPE_MOVE -> {
+                entity = if (entity != null) entity else Utils.entities.random()
+                type = types.random()
+            }
+        }
+        forceConsistency()
     }
 
     /**
@@ -95,11 +100,6 @@ class AbstractAction {
             }
         }
         return UnitAction(UnitAction.TYPE_NONE)
-    }
-
-    fun mutate() {
-        action = Utils.actions.random()
-        onActionChangeSetup()
     }
 
     override fun toString(): String {

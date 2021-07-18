@@ -10,10 +10,10 @@ import rts.units.UnitTypeTable
  */
 class PartialState : State() {
 
-    var unitType: String? = getRandomUnit()
+    var unitType: String? = null
 
-    private fun getRandomUnit(): String? = if (coinToss(0.3)) null else
-            UnitTypeTable(UTT_VERSION).unitTypes.filter { it.name != "resource" }.random().name
+    private fun getRandomUnit(): String? = if (coinToss(0.5)) null  else
+            UnitTypeTable(UTT_VERSION).unitTypes.filter { it.name != "Resource" }.random().name
 
     /**
      * Initialises randomly, only one value to start small.

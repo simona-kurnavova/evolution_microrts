@@ -8,7 +8,7 @@ import rts.PhysicalGameState
 import kotlin.math.abs
 
 /**
- * Object for different fitness functions
+ * Object for different fitness functions.
  */
 object Fitness {
 

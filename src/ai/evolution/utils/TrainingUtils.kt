@@ -36,7 +36,7 @@ object TrainingUtils {
      * Genetic programming model settings only.
      */
     const val BEST_AI_EPOCH = 500 // Minimum number of epochs, after which can training stop after finding the best candidate
-    const val CONDITION_COUNT = 10 // Number of conditions per one unit
+    const val CONDITION_COUNT = 20 // Number of conditions per one unit
     const val COND_MUT_PROB = 0.14 // Probability of mutation
     const val PROB_BASE_ATTACK = 0.25 // Probability of base attack
 
@@ -53,7 +53,7 @@ object TrainingUtils {
      */
     const val ADAPTIVE_BUDGET = false
     const val TRESHOLD_FITNESS = 700 // Adapt when this fitness value is reached
-    const val BUDGET_INITIAL = 5
+    const val BUDGET_INITIAL = 10
     const val BUDGET_ADAPT_CONSTANT = 5 // Adapt fitness by adding this number
     const val BUDGET_EPOCH_STEP = 0 // Adapt fitness after this number of epochs
     const val BUDGET_UPPER_LIMIT = 100 // Stop when this fitness is reached and trained

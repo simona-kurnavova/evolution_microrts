@@ -53,11 +53,11 @@ class UnitDecisionMaker(conditionCount: Int = 0) {
      */
     fun decide(realState: State): List<Pair<Condition, Double>> = conditions.map {
         it to realState.compareTo(it.partialState, it.abstractAction)
-    }.toList().shuffled().sortedByDescending { (_, value) -> value }
+    }.toList().shuffled().filter { it.second > 0.001 }.sortedByDescending { (_, value) -> value }
 
     /**
      * Returns list of actions with assigned priorities. Sorted in descending order.
-     * Used for Strategy GP.
+     * Used for Strategy GP, with added [globalState].
      */
     fun decide(realState: State, globalState: GlobalState): List<Pair<Condition, Double>> =
         conditions.map {
